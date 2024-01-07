@@ -7,7 +7,7 @@ const drawFromSocket = (socketMoves, socketOptions, ctx, afteDraw) => {
     tempCtx.beginPath();
     socketMoves.forEach(([x, y]) => {
       tempCtx.lineTo(x, y);
-      tempCtx.stoke();
+      tempCtx.stroke();
     });
     tempCtx.closePath();
     afteDraw();

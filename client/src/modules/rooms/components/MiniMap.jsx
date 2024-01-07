@@ -2,10 +2,11 @@ import { forwardRef, useEffect, useRef } from "react";
 import { useViewportSize } from "../../../common/hooks/useViewportSize";
 import { useMotionValue, motion } from "framer-motion";
 import { CANVAS_SIZE } from "../../../common/constants/canvasSize";
+import { useBoardPosition } from "../hooks/useBoardPosition";
 
 const MiniMap = forwardRef((props, ref) => {
-  const { x, y, dragging, setMovedMiniMap } = props;
-
+  const { dragging, setMovedMiniMap } = props;
+  const { x, y } = useBoardPosition();
   const containerRef = useRef(null);
   const { width, height } = useViewportSize();
   const miniX = useMotionValue(0);

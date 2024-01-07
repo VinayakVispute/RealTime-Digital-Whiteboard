@@ -8,7 +8,8 @@ import { useDraw } from "../hooks/CanvasHooks";
 import { socket } from "../../../common/lib/socket";
 import { drawFromSocket } from "../helpers/CanvasHelpers";
 import MiniMap from "./MiniMap";
-import { useOptions } from "../../../common/context/options";
+import { useOptions } from "../../../common/context/Options";
+import { useBoardPosition } from "../hooks/useBoardPosition";
 
 const Canvas = () => {
   const canvasRef = useRef(null);
@@ -26,9 +27,7 @@ const Canvas = () => {
     }
   });
 
-  const x = useMotionValue(0);
-  const y = useMotionValue(0);
-
+  const { x, y } = useBoardPosition();
   const copyCanvasToSmall = () => {
     if (canvasRef.current) {
       smallCanvasRef.current
@@ -53,7 +52,6 @@ const Canvas = () => {
   useEffect(() => {
     const newCtx = canvasRef.current?.getContext("2d");
     if (newCtx) {
-      console.log("newCtx", newCtx);
       setCtx(newCtx);
     }
     const handleKeyUp = (e) => {
@@ -95,7 +93,7 @@ const Canvas = () => {
   }, [drawing, ctx]);
 
   return (
-    <div className="w-full h-full overflow-hidden">
+    <div className=" relative w-full h-full overflow-hidden">
       <motion.canvas
         ref={canvasRef}
         width={CANVAS_SIZE.width}
@@ -129,8 +127,6 @@ const Canvas = () => {
       />
       <MiniMap
         ref={smallCanvasRef}
-        x={x}
-        y={y}
         dragging={dragging}
         setMovedMiniMap={setMovedMiniMap}
       />

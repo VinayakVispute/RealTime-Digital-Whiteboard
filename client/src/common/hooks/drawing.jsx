@@ -3,11 +3,9 @@ import { socket } from "../lib/socket";
 let moves = [];
 
 export const useDraw = (options, ctx) => {
-  console.log(ctx);
   const [drawing, setDrawing] = useState(false);
   useEffect(() => {
     if (ctx) {
-      console.log("ctx", ctx);
       ctx.lineJoin = "round";
       ctx.lineCap = "round";
       ctx.lineWidth = options.lineWidth;
@@ -16,7 +14,6 @@ export const useDraw = (options, ctx) => {
   }, [ctx, options]);
   const handleStartDrawing = (x, y) => {
     if (!ctx) return;
-    console.log("x,y", x, y);
     moves = [[x, y]];
     setDrawing(true);
 

@@ -1,11 +1,7 @@
-import { useOptions } from "../../common/context/options";
-import Canvas from "../../modules/rooms/components/Canvas";
+import Room from "../../modules/rooms/components/Room";
 
 const Home = () => {
-  const { options } = useOptions();
-  console.log(options);
-
-  return <Canvas />;
+  return <Room />;
 };
 
 export default Home;

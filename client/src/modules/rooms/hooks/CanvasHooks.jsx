@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { socket } from "../../../common/lib/socket";
-import { useOptions } from "../../../common/context/options";
+import { useOptions } from "../../../common/context/Options";
 
 let moves = [];
 
@@ -17,9 +17,7 @@ export const useDraw = (ctx, blocked, movedX, movedY, handleEnd) => {
     }
   }, [ctx, options]);
   const handleStartDrawing = (x, y) => {
-    console.log("x,y", x, y, "blocked", blocked, "ctx", ctx);
     if (!ctx || blocked) return;
-    console.log("updated", "x,y", x, y, "blocked", blocked, "ctx", ctx);
     moves = [[x + movedX, y + movedY]];
     setDrawing(true);
 
