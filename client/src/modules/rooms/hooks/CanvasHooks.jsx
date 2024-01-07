@@ -1,8 +1,11 @@
 import { useState, useEffect } from "react";
-import { socket } from "../lib/socket";
+import { socket } from "../../../common/lib/socket";
+import { useOptions } from "../../../common/context/options";
+
 let moves = [];
 
-export const useDraw = (options, ctx) => {
+export const useDraw = (ctx, blocked, movedX, movedY, handleEnd) => {
+  const { options } = useOptions();
   const [drawing, setDrawing] = useState(false);
 
   useEffect(() => {
@@ -14,30 +17,31 @@ export const useDraw = (options, ctx) => {
     }
   }, [ctx, options]);
   const handleStartDrawing = (x, y) => {
-    if (!ctx) return;
-
-    moves = [[x, y]];
+    console.log("x,y", x, y, "blocked", blocked, "ctx", ctx);
+    if (!ctx || blocked) return;
+    console.log("updated", "x,y", x, y, "blocked", blocked, "ctx", ctx);
+    moves = [[x + movedX, y + movedY]];
     setDrawing(true);
 
     ctx.beginPath();
-    ctx.lineTo(x, y);
+    ctx.lineTo(x + movedX, y + movedY);
     ctx.stroke();
   };
 
   const handleEndDrawing = () => {
-    if (!ctx) return;
+    if (!ctx || blocked) return;
 
     socket.emit("draw", moves, options);
     setDrawing(false);
     ctx.closePath();
+    handleEnd();
   };
 
   const handleDraw = (x, y) => {
-    if (ctx && drawing) {
-      moves.push([x, y]);
-      ctx.lineTo(x, y);
-      ctx.stroke();
-    }
+    if (!ctx || !drawing || blocked) return;
+    moves.push([x + movedX, y + movedY]);
+    ctx.lineTo(x + movedX, y + movedY);
+    ctx.stroke();
   };
 
   return {
