@@ -3,6 +3,7 @@ import { useBoardPosition } from "../hooks/useBoardPosition";
 import { useInterval, useMouse } from "react-use";
 import { socket } from "../../../common/lib/socket";
 import { motion } from "framer-motion";
+import { getPos } from "../../../common/lib/getPos";
 
 const MousePosition = () => {
   const prePosition = useRef({ x: 0, y: 0 });
@@ -12,18 +13,18 @@ const MousePosition = () => {
 
   useInterval(() => {
     if (prePosition.current.x !== docX || prePosition.current.y !== docY) {
-      socket.emit("mouse_moved", docX - x.get(), docY - y.get());
+      socket.emit("mouse_moved", getPos(docX, x), getPos(docY, y));
       prePosition.current = { x: docX, y: docY };
     }
   }, 300);
   return (
     <motion.div
       ref={ref}
-      className="absolute top-0 left-0 z-50 select-none"
+      className="absolute top-0 left-0 z-50 select-none text-lg pointer-events-none"
       animate={{ x: docX + 15, y: docY + 15 }}
       transition={{ duration: 0.03, ease: "linear" }}
     >
-      {docX - x.get()}, {docY - y.get()}
+      {getPos(docX, x).toFixed(0)} | {getPos(docY, y).toFixed(0)}
     </motion.div>
   );
 };

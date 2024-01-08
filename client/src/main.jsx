@@ -4,13 +4,16 @@ import App from "./App.jsx";
 import "./index.css";
 import { OptionsProvider } from "./common/context/Options";
 import { RoomProvider } from "./modules/rooms/context/Room.jsx";
+import { UsersProvider } from "./common/context/Users.jsx";
 
 ReactDOM.createRoot(document.getElementById("root")).render(
   <React.StrictMode>
     <OptionsProvider>
-      <RoomProvider>
-        <App />
-      </RoomProvider>
+      <UsersProvider>
+        <RoomProvider>
+          <App />
+        </RoomProvider>
+      </UsersProvider>
     </OptionsProvider>
   </React.StrictMode>
 );

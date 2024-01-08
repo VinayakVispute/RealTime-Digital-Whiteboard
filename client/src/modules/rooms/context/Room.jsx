@@ -16,7 +16,7 @@ export const useRoomContext = () => {
 };
 
 export const RoomProvider = (props) => {
-  const { setUsers } = useUsersContext();
+  const { UpdateUsers } = useUsersContext();
   const usersIds = useUserIds();
 
   const x = useMotionValue(0);
@@ -24,15 +24,17 @@ export const RoomProvider = (props) => {
 
   useEffect(() => {
     socket.on("users_in_room", (newUsers) => {
+      console.log("users_in_room", newUsers);
       newUsers.forEach((newUser) => {
+        console.log(newUser, socket.id);
         if (!usersIds.includes(newUser) && newUser !== socket.id) {
-          setUsers((prev) => ({ ...prev, [newUser]: [] }));
+          UpdateUsers((prev) => ({ ...prev, [newUser]: [] }));
         }
       });
     });
 
     socket.on("user_disconnected", (disconnectedUser) => {
-      setUsers((prev) => {
+      UpdateUsers((prev) => {
         const newUsers = { ...prev };
         delete newUsers[disconnectedUser];
         return newUsers;
@@ -43,7 +45,7 @@ export const RoomProvider = (props) => {
       socket.off("users_in_room");
       socket.off("user_disconnected");
     };
-  }, [setUsers, usersIds]);
+  }, [UpdateUsers, usersIds]);
 
   return <roomContext.Provider value={{ x, y }} {...props} />;
 };

@@ -1,4 +1,4 @@
-import { useContext, createContext } from "react";
+import { useContext, createContext, useState } from "react";
 
 const UsersContext = createContext();
 
@@ -11,11 +11,14 @@ export const useUsersContext = () => {
 };
 
 export const UsersProvider = (props) => {
-  const [users, setUsers] = useState({});
+  const [users, UpdateUsers] = useState({});
   const usersIds = Object.keys(users);
 
   return (
-    <UsersContext.Provider value={{ users, usersIds, setUsers }} {...props} />
+    <UsersContext.Provider
+      value={{ users, usersIds, UpdateUsers }}
+      {...props}
+    />
   );
 };
 

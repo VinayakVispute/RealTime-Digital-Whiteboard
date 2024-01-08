@@ -66,7 +66,7 @@ const MiniMap = forwardRef((props, ref) => {
           x: -x.get() / 10,
           y: -y.get() / 10,
         }}
-        transition={{ duration: 0.1 }}
+        transition={{ duration: 0 }}
       ></motion.div>
     </div>
   );
