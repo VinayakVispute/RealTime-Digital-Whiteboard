@@ -4,8 +4,11 @@ import Canvas from "./Canvas";
 import MousePosition from "./MousePosition";
 import MouseRenderer from "./MouseRenderer";
 import ToolBar from "./ToolBar";
+import { useRoomId } from "../../../common/context/RoomId";
 
 const Room = () => {
+  const roomId = useRoomId();
+  if (!roomId) return <div>No RoomId.......</div>;
   return (
     <RoomProvider>
       <div className="relative w-full h-full overflow-hidden">

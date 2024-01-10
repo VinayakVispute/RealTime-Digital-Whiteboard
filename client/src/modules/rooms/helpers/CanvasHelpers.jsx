@@ -1,21 +1,21 @@
 const handleMove = (move, ctx) => {
   const { options, path } = move;
-  const tempCtx = ctx;
-  if (tempCtx) {
-    tempCtx.lineWidth = options.lineWidth;
-    tempCtx.strokeStyle = options.lineColor;
+  ctx.lineWidth = options.lineWidth;
+  ctx.strokeStyle = options.lineColor;
 
-    tempCtx.beginPath();
-    path.forEach(([x, y]) => {
-      tempCtx.lineTo(x, y);
-    });
-    tempCtx.stroke();
-    tempCtx.closePath();
-  }
+  ctx.beginPath();
+  path.forEach(([x, y]) => {
+    ctx.lineTo(x, y);
+  });
+  ctx.stroke();
+  ctx.closePath();
 };
 
-const drawonUndo = (ctx, savedMoves, users) => {
+const drawAllMoves = (ctx, movesWithoutUser, savedMoves, users) => {
   ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height);
+
+  movesWithoutUser.forEach((move) => handleMove(move, ctx));
+
   Object.values(users).forEach((user) => {
     user.forEach((move) => handleMove(move, ctx));
   });
@@ -24,4 +24,5 @@ const drawonUndo = (ctx, savedMoves, users) => {
     handleMove(move, ctx);
   });
 };
-export { handleMove, drawonUndo };
+
+export { handleMove, drawAllMoves };

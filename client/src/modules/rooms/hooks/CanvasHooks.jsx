@@ -1,12 +1,13 @@
 import { useState, useEffect, useCallback } from "react";
 import { socket } from "../../../common/lib/socket";
 import { useOptions } from "../../../common/context/Options";
-import { drawonUndo, handleMove } from "../helpers/CanvasHelpers";
+import { drawAllMoves, handleMove } from "../helpers/CanvasHelpers";
 import { useUsers, useUsersContext } from "../../../common/context/Users";
 import { useBoardPosition } from "./useBoardPosition";
 import { getPos } from "../../../common/lib/getPos";
 
-let moves = [];
+const movesWithoutUser = [];
+let tempMoves = [];
 const savedMoves = [];
 
 export const useDraw = (ctx, blocked, handleEnd) => {
@@ -32,7 +33,7 @@ export const useDraw = (ctx, blocked, handleEnd) => {
     if (ctx) {
       savedMoves.pop();
       socket.emit("undo");
-      drawonUndo(ctx, savedMoves, users);
+      drawAllMoves(ctx, movesWithoutUser, savedMoves, users);
       handleEnd();
     }
   }, [ctx, handleEnd, users]);
@@ -57,6 +58,7 @@ export const useDraw = (ctx, blocked, handleEnd) => {
     ctx.beginPath();
     ctx.lineTo(getPos(x, movedX), getPos(y, movedY));
     ctx.stroke();
+    tempMoves.push([getPos(x, movedX), getPos(y, movedY)]);
   };
 
   const handleEndDrawing = () => {
@@ -66,14 +68,16 @@ export const useDraw = (ctx, blocked, handleEnd) => {
     ctx.closePath();
     const move = {
       options,
-      path: moves,
+      path: tempMoves,
     };
 
     savedMoves.push(move);
 
+    tempMoves = [];
+
     socket.emit("draw", move);
 
-    moves = [];
+    drawAllMoves(ctx, movesWithoutUser, savedMoves, users);
 
     handleEnd();
   };
@@ -84,7 +88,7 @@ export const useDraw = (ctx, blocked, handleEnd) => {
     ctx.lineTo(getPos(x, movedX), getPos(y, movedY));
     ctx.stroke();
 
-    moves.push([getPos(x, movedX), getPos(y, movedY)]);
+    tempMoves.push([getPos(x, movedX), getPos(y, movedY)]);
   };
 
   return {
@@ -100,19 +104,25 @@ export const useSocketDraw = (ctx, drawing, handleEnd) => {
   const { UpdateUsers } = useUsersContext();
 
   useEffect(() => {
-    socket.emit("joined_room");
-  }, []);
+    if (ctx) socket.emit("joined_room");
+  }, [ctx]);
 
   useEffect(() => {
-    socket.on("room", (roomJSON) => {
-      const room = new Map(JSON.parse(roomJSON));
+    socket.on("room", (room, usersToParse) => {
+      if (!ctx) return;
 
-      room.forEach((userMoves, userId) => {
-        if (ctx) userMoves.forEach((move) => handleMove(move, ctx));
-        handleEnd();
+      const users = new Map(JSON.parse(usersToParse));
 
+      room.drawed.forEach((move) => {
+        handleMove(move, ctx);
+        movesWithoutUser.push(move);
+      });
+
+      users.forEach((userMoves, userId) => {
+        userMoves.forEach((move) => handleMove(move, ctx));
         UpdateUsers((prev) => ({ ...prev, [userId]: userMoves }));
       });
+      handleEnd();
     });
     return () => {
       socket.off("room");
@@ -149,7 +159,7 @@ export const useSocketDraw = (ctx, drawing, handleEnd) => {
         });
       }
     };
-  }, [ctx, handleEnd, UpdateUsers]);
+  }, [ctx, handleEnd, drawing, UpdateUsers]);
 
   useEffect(() => {
     const handleUserUndo = (userId) => {
@@ -158,12 +168,13 @@ export const useSocketDraw = (ctx, drawing, handleEnd) => {
         newUsers[userId] = newUsers[userId].slice(0, -1); // remove last move from user
         if (ctx) {
           // Assuming drawonUndo is a separate function you've defined elsewhere
-          drawonUndo(ctx, savedMoves, newUsers);
+          drawAllMoves(ctx, movesWithoutUser, savedMoves, newUsers);
           handleEnd();
         }
         return newUsers;
       });
     };
+
     socket.on("user_undo", handleUserUndo);
     return () => {
       socket.off("user_undo", handleUserUndo);

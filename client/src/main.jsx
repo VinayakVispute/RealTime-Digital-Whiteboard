@@ -5,12 +5,15 @@ import "./index.css";
 import { OptionsProvider } from "./common/context/Options";
 import { RoomProvider } from "./modules/rooms/context/Room.jsx";
 import { UsersProvider } from "./common/context/Users.jsx";
+import { RoomIdProvider } from "./common/context/RoomId.jsx";
 
 ReactDOM.createRoot(document.getElementById("root")).render(
   <OptionsProvider>
     <UsersProvider>
       <RoomProvider>
-        <App />
+        <RoomIdProvider>
+          <App />
+        </RoomIdProvider>
       </RoomProvider>
     </UsersProvider>
   </OptionsProvider>

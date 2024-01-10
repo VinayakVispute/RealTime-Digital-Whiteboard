@@ -16,7 +16,7 @@ const MousePosition = () => {
       socket.emit("mouse_moved", getPos(docX, x), getPos(docY, y));
       prePosition.current = { x: docX, y: docY };
     }
-  }, 300);
+  }, 25);
   return (
     <motion.div
       ref={ref}
