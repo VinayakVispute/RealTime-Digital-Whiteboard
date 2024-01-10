@@ -4,8 +4,7 @@ import { socket } from "../../../common/lib/socket";
 import { motion } from "framer-motion";
 import { BsCursorFill } from "react-icons/bs";
 
-const SocketMouse = ({ userId }) => {
-  console.log("SocketMouse");
+const UserMouse = ({ userId }) => {
   const boardPosition = useBoardPosition();
   const [x, setX] = useState(boardPosition.x.get());
   const [y, setY] = useState(boardPosition.y.get());
@@ -22,7 +21,6 @@ const SocketMouse = ({ userId }) => {
 
   useEffect(() => {
     const handleMouseMoved = (newX, newY, socketIdMoved) => {
-      console.log("mouse_moved");
       if (socketIdMoved === userId) {
         setPos({
           x: newX,
@@ -42,7 +40,7 @@ const SocketMouse = ({ userId }) => {
     <motion.div
       className={`absolute top-0 left-0 text-blue-800 ${
         pos.x === -1 && "hidden"
-      }`}
+      } pointer-events-none`}
       animate={{ x: pos.x, y: pos.y }}
       transition={{ duration: 0.3 }}
     >
@@ -51,4 +49,4 @@ const SocketMouse = ({ userId }) => {
   );
 };
 
-export default SocketMouse;
+export default UserMouse;

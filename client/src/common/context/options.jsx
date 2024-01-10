@@ -16,9 +16,7 @@ export const OptionsProvider = (props) => {
     lineWidth: 5,
   });
 
-  const updateOptions = (newOptions) => {
-    setOptions((prevOptions) => ({ ...prevOptions, ...newOptions }));
-  };
+  const updateOptions = (newOptions) => setOptions(newOptions);
 
   return (
     <OptionsContext.Provider value={{ options, updateOptions }} {...props} />

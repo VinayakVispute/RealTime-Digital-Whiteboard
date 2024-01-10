@@ -1,7 +1,8 @@
+import React from "react";
 import Room from "../../modules/rooms/components/Room";
 
-const Home = () => {
+const RoomPage = () => {
   return <Room />;
 };
 
-export default Home;
+export default RoomPage;

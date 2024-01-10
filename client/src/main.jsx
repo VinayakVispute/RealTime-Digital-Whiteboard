@@ -7,13 +7,11 @@ import { RoomProvider } from "./modules/rooms/context/Room.jsx";
 import { UsersProvider } from "./common/context/Users.jsx";
 
 ReactDOM.createRoot(document.getElementById("root")).render(
-  <React.StrictMode>
-    <OptionsProvider>
-      <UsersProvider>
-        <RoomProvider>
-          <App />
-        </RoomProvider>
-      </UsersProvider>
-    </OptionsProvider>
-  </React.StrictMode>
+  <OptionsProvider>
+    <UsersProvider>
+      <RoomProvider>
+        <App />
+      </RoomProvider>
+    </UsersProvider>
+  </OptionsProvider>
 );

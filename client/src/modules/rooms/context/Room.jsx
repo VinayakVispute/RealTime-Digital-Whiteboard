@@ -23,14 +23,8 @@ export const RoomProvider = (props) => {
   const y = useMotionValue(0);
 
   useEffect(() => {
-    socket.on("users_in_room", (newUsers) => {
-      console.log("users_in_room", newUsers);
-      newUsers.forEach((newUser) => {
-        console.log(newUser, socket.id);
-        if (!usersIds.includes(newUser) && newUser !== socket.id) {
-          UpdateUsers((prev) => ({ ...prev, [newUser]: [] }));
-        }
-      });
+    socket.on("new_user", (newUser) => {
+      UpdateUsers((prev) => ({ ...prev, [newUser]: [] }));
     });
 
     socket.on("user_disconnected", (disconnectedUser) => {
@@ -42,7 +36,7 @@ export const RoomProvider = (props) => {
     });
 
     return () => {
-      socket.off("users_in_room");
+      socket.off("new_user");
       socket.off("user_disconnected");
     };
   }, [UpdateUsers, usersIds]);

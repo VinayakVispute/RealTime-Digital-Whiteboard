@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback } from "react";
 import { socket } from "../../../common/lib/socket";
 import { useOptions } from "../../../common/context/Options";
-import { drawonUndo } from "../helpers/CanvasHelpers";
+import { drawonUndo, handleMove } from "../helpers/CanvasHelpers";
 import { useUsers, useUsersContext } from "../../../common/context/Users";
 import { useBoardPosition } from "./useBoardPosition";
 import { getPos } from "../../../common/lib/getPos";
@@ -11,12 +11,13 @@ const savedMoves = [];
 
 export const useDraw = (ctx, blocked, handleEnd) => {
   const users = useUsers();
-  const { options } = useOptions();
-  const [drawing, setDrawing] = useState(false);
-  const boardPosition = useBoardPosition();
 
+  const boardPosition = useBoardPosition();
   const movedX = boardPosition.x;
   const movedY = boardPosition.y;
+
+  const { options } = useOptions();
+  const [drawing, setDrawing] = useState(false);
 
   useEffect(() => {
     if (ctx) {
@@ -25,7 +26,7 @@ export const useDraw = (ctx, blocked, handleEnd) => {
       ctx.lineWidth = options.lineWidth;
       ctx.strokeStyle = options.lineColor;
     }
-  }, [ctx, options]);
+  });
 
   const handleUndo = useCallback(() => {
     if (ctx) {
@@ -49,7 +50,8 @@ export const useDraw = (ctx, blocked, handleEnd) => {
   }, [handleUndo]);
 
   const handleStartDrawing = (x, y) => {
-    if (!ctx || blocked) return;
+    if (!ctx || blocked || blocked) return;
+
     setDrawing(true);
 
     ctx.beginPath();
@@ -62,9 +64,14 @@ export const useDraw = (ctx, blocked, handleEnd) => {
 
     setDrawing(false);
     ctx.closePath();
-    savedMoves.push(moves);
+    const move = {
+      options,
+      path: moves,
+    };
 
-    socket.emit("draw", moves, options);
+    savedMoves.push(move);
+
+    socket.emit("draw", move);
 
     moves = [];
 
@@ -89,32 +96,62 @@ export const useDraw = (ctx, blocked, handleEnd) => {
   };
 };
 
-export const useSocketDraw = (ctx, handleEnd) => {
+export const useSocketDraw = (ctx, drawing, handleEnd) => {
   const { UpdateUsers } = useUsersContext();
 
   useEffect(() => {
-    const handleUserDraw = (newMoves, options, userId) => {
-      if (ctx) {
-        ctx.lineWidth = options.lineWidth;
-        ctx.strokeStyle = options.lineColor;
+    socket.emit("joined_room");
+  }, []);
 
-        ctx.beginPath();
+  useEffect(() => {
+    socket.on("room", (roomJSON) => {
+      const room = new Map(JSON.parse(roomJSON));
 
-        newMoves.forEach(([x, y]) => {
-          ctx.lineTo(x, y);
-        });
+      room.forEach((userMoves, userId) => {
+        if (ctx) userMoves.forEach((move) => handleMove(move, ctx));
+        handleEnd();
 
-        ctx.stroke();
-        ctx.closePath();
+        UpdateUsers((prev) => ({ ...prev, [userId]: userMoves }));
+      });
+    });
+    return () => {
+      socket.off("room");
+    };
+  }, [ctx, handleEnd, UpdateUsers]);
+
+  useEffect(() => {
+    let moveToDrawLater;
+    let userIdLater = "";
+    socket.on("user_draw", (move, userId) => {
+      if (ctx && !drawing) {
+        handleMove(move, ctx);
         handleEnd();
         UpdateUsers((prev) => {
           const newUsers = { ...prev };
-          newUsers[userId] = [...newUsers[userId], newMoves];
+          newUsers[userId] = [...newUsers[userId], move];
+          return newUsers;
+        });
+      } else {
+        moveToDrawLater = move;
+        userIdLater = userId;
+      }
+    });
+
+    return () => {
+      socket.off("user_draw");
+      if (moveToDrawLater && userIdLater && ctx) {
+        handleMove(moveToDrawLater, ctx);
+        handleEnd();
+        UpdateUsers((prev) => {
+          const newUsers = { ...prev };
+          newUsers[userIdLater] = [...newUsers[userIdLater], moveToDrawLater];
           return newUsers;
         });
       }
     };
+  }, [ctx, handleEnd, UpdateUsers]);
 
+  useEffect(() => {
     const handleUserUndo = (userId) => {
       UpdateUsers((prev) => {
         const newUsers = { ...prev };
@@ -127,11 +164,8 @@ export const useSocketDraw = (ctx, handleEnd) => {
         return newUsers;
       });
     };
-    socket.on("user_draw", handleUserDraw);
     socket.on("user_undo", handleUserUndo);
-
     return () => {
-      socket.off("user_draw", handleUserDraw);
       socket.off("user_undo", handleUserUndo);
     };
   }, [ctx, handleEnd, UpdateUsers]);

@@ -1,40 +1,27 @@
-const drawFromSocket = (socketMoves, socketOptions, ctx, afteDraw) => {
+const handleMove = (move, ctx) => {
+  const { options, path } = move;
   const tempCtx = ctx;
   if (tempCtx) {
-    tempCtx.lineWidth = socketOptions.lineWidth;
-    tempCtx.strokeStyle = socketOptions.lineColor;
+    tempCtx.lineWidth = options.lineWidth;
+    tempCtx.strokeStyle = options.lineColor;
 
     tempCtx.beginPath();
-    socketMoves.forEach(([x, y]) => {
+    path.forEach(([x, y]) => {
       tempCtx.lineTo(x, y);
     });
     tempCtx.stroke();
     tempCtx.closePath();
-    afteDraw();
   }
 };
 
 const drawonUndo = (ctx, savedMoves, users) => {
   ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height);
   Object.values(users).forEach((user) => {
-    user.forEach((userMove) => {
-      ctx.beginPath();
-      userMove.forEach(([x, y]) => {
-        ctx.lineTo(x, y);
-      });
-      ctx.stroke();
-      ctx.closePath();
-    });
+    user.forEach((move) => handleMove(move, ctx));
   });
 
-  savedMoves.forEach((movesArr) => {
-    ctx.beginPath();
-    movesArr.forEach(([x, y]) => {
-      ctx.lineTo(x, y);
-    });
-    ctx.stroke();
-    ctx.closePath();
+  savedMoves.forEach((move) => {
+    handleMove(move, ctx);
   });
 };
-
-export { drawFromSocket, drawonUndo };
+export { handleMove, drawonUndo };

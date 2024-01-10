@@ -1,7 +1,17 @@
-import Home from "./pages/Home";
+import React from "react";
+import { Route, BrowserRouter as Router, Routes } from "react-router-dom";
+import HomePage from "./pages/HomePage";
+import RoomPage from "./pages/RoomPage/RoomPage";
 
 function App() {
-  return <Home />;
+  return (
+    <Router>
+      <Routes>
+        <Route exact path="/" element={<HomePage />} />
+        <Route path="/room/:id" element={<RoomPage />} />
+      </Routes>
+    </Router>
+  );
 }
 
 export default App;

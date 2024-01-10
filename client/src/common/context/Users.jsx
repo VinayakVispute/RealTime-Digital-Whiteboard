@@ -11,8 +11,12 @@ export const useUsersContext = () => {
 };
 
 export const UsersProvider = (props) => {
-  const [users, UpdateUsers] = useState({});
+  const [users, setUsers] = useState({});
   const usersIds = Object.keys(users);
+
+  const UpdateUsers = (newUsers) => {
+    return setUsers(newUsers);
+  };
 
   return (
     <UsersContext.Provider
