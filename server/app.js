@@ -24,19 +24,18 @@ const rooms = new Map();
 const addMove = (roomId, socketId, move) => {
   const room = rooms.get(roomId);
 
-  if (!room?.users?.has(socketId)) {
-    room?.users?.set(socketId, [move]);
+  if (!room.users.has(socketId)) {
+    room.users.set(socketId, [move]);
+    console.log("Set new user");
   }
-  room?.users?.get(socketId)?.push(move);
-  console.log(rooms.get("global"));
+  room.users.get(socketId).push(move);
+  console.log("addMove", room.users.get(socketId));
+  console.log("addMove", rooms.get(roomId));
 };
 
 const undoMove = (roomId, socketId) => {
   const room = rooms.get(roomId);
-
-  if (room?.has(socketId)) {
-    room?.users?.get(socketId).pop();
-  }
+  room.users.get(socketId).pop();
 };
 
 const leaveRoom = (roomId, socketId) => {
