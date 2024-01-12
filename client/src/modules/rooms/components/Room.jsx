@@ -3,7 +3,7 @@ import { RoomProvider } from "../context/Room";
 import Canvas from "./Canvas";
 import MousePosition from "./MousePosition";
 import MouseRenderer from "./MouseRenderer";
-import ToolBar from "./ToolBar";
+import ToolBar from "./ToolBar/ToolBar";
 import { useRoom, useRoomIdContext } from "../../../common/context/RoomId";
 import { useNavigate, useParams } from "react-router-dom";
 import { socket } from "../../../common/lib/socket";

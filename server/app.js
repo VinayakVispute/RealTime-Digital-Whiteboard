@@ -40,6 +40,7 @@ const undoMove = (roomId, socketId) => {
 
 const leaveRoom = (roomId, socketId) => {
   const room = rooms.get(roomId);
+  if (!room) return;
   const userMoves = room?.users?.get(socketId);
   room?.drawed?.push(...userMoves);
   room?.users?.delete(socketId);

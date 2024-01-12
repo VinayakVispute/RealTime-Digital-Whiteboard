@@ -19,6 +19,14 @@ export const OptionsProvider = (props) => {
   const updateOptions = (newOptions) => setOptions(newOptions);
 
   return (
-    <OptionsContext.Provider value={{ options, updateOptions }} {...props} />
+    <OptionsContext.Provider
+      value={{ options, setOptions, updateOptions }}
+      {...props}
+    />
   );
+};
+
+export const useOptionsValue = () => {
+  const { options } = useOptions();
+  return options;
 };

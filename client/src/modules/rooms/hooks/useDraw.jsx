@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from "react";
 import { socket } from "../../../common/lib/socket";
-import { useOptions } from "../../../common/context/Options";
+import { useOptionsValue } from "../../../common/context/Options";
 import { useBoardPosition } from "./useBoardPosition";
 import { getPos } from "../../../common/lib/getPos";
 import { useMyMoves } from "../../../common/context/RoomId";
@@ -14,7 +14,8 @@ const useDraw = (ctx, blocked) => {
   const movedX = boardPosition.x;
   const movedY = boardPosition.y;
 
-  const { options } = useOptions();
+  const options = useOptionsValue();
+  console.log("options", options);
   const [drawing, setDrawing] = useState(false);
 
   useEffect(() => {

@@ -15,12 +15,12 @@ const MiniMap = forwardRef((props, ref) => {
   useEffect(() => {
     miniX.onChange((newX) => {
       if (!dragging) {
-        x.set(-newX * 10);
+        x.set(-newX * 7);
       }
     });
     miniY.onChange((newY) => {
       if (!dragging) {
-        y.set(-newY * 10); // 10 is the scale factor of the minimap to the canvas size
+        y.set(-newY * 7);
       }
     });
 
@@ -32,11 +32,11 @@ const MiniMap = forwardRef((props, ref) => {
 
   return (
     <div
-      className="absolute top-10 right-10 z-50 bg-zinc-400"
+      className="absolute top-10 right-10 z-30 rounded-lg border-2  border-red-500 bg-zinc-200"
       ref={containerRef}
       style={{
-        width: CANVAS_SIZE.width / 10,
-        height: CANVAS_SIZE.height / 10,
+        width: CANVAS_SIZE.width / 7,
+        height: CANVAS_SIZE.height / 7,
       }}
     >
       <canvas
@@ -57,14 +57,14 @@ const MiniMap = forwardRef((props, ref) => {
         onDragEnd={() => setMovedMiniMap((prev) => !prev)}
         className="absolute top-0 left-0 cursor-grab border-2 border-red-500"
         style={{
-          width: width / 10,
-          height: height / 10,
+          width: width / 7,
+          height: height / 7,
           x: miniX,
           y: miniY,
         }}
         animate={{
-          x: -x.get() / 10,
-          y: -y.get() / 10,
+          x: -x.get() / 7,
+          y: -y.get() / 7,
         }}
         transition={{ duration: 0 }}
       ></motion.div>
