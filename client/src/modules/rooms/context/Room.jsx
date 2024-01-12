@@ -1,7 +1,7 @@
 import { useMotionValue } from "framer-motion";
 import { createContext, useContext, useEffect } from "react";
-import { useUsersContext, useUserIds } from "../../../common/context/Users";
 import { socket } from "../../../common/lib/socket";
+import { setRoomIdContext, useSetUsers } from "../../../common/context/RoomId";
 const roomContext = createContext({
   x: null,
   y: null,
@@ -16,30 +16,31 @@ export const useRoomContext = () => {
 };
 
 export const RoomProvider = (props) => {
-  const { UpdateUsers } = useUsersContext();
-  const usersIds = useUserIds();
-
+  const setRoom = setRoomIdContext();
+  const { handleAddUser, handleRemoveUser } = useSetUsers();
   const x = useMotionValue(0);
   const y = useMotionValue(0);
 
   useEffect(() => {
+    socket.on("room", (room, usersToParse) => {
+      const users = new Map(JSON.parse(usersToParse));
+      setRoom((prev) => ({ ...prev, users, movesWithoutUser: room.drawed }));
+    });
+
     socket.on("new_user", (newUser) => {
-      UpdateUsers((prev) => ({ ...prev, [newUser]: [] }));
+      handleAddUser(newUser);
     });
 
     socket.on("user_disconnected", (disconnectedUser) => {
-      UpdateUsers((prev) => {
-        const newUsers = { ...prev };
-        delete newUsers[disconnectedUser];
-        return newUsers;
-      });
+      handleRemoveUser(disconnectedUser);
     });
 
     return () => {
+      socket.off("room");
       socket.off("new_user");
       socket.off("user_disconnected");
     };
-  }, [UpdateUsers, usersIds]);
+  }, [handleAddUser, handleRemoveUser, setRoom]);
 
   return <roomContext.Provider value={{ x, y }} {...props} />;
 };

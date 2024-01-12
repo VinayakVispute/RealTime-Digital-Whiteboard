@@ -56,16 +56,31 @@ io.on("connection", (socket) => {
   console.log(`User with id ${socket.id} is connected to the server`);
 
   socket.on("create_room", () => {
+    console.log("Received create_room event");
+
     let roomId = "";
     do {
       roomId = Math.random().toString(36).substring(2, 6);
     } while (rooms.has(roomId));
+
+    console.log("Generated roomId:", roomId);
+
     socket.join(roomId);
-    // console.log("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!");
+    console.log(`Socket ${socket.id} joined room ${roomId}`);
+
+    // Create a new room object with users and drawed arrays
     rooms.set(roomId, { users: new Map(), drawed: [] });
 
+    // Add the current socket to the users Map with an empty array
     rooms.get(roomId)?.users.set(socket.id, []);
+
+    console.log(
+      `Room ${roomId} created with initial state:`,
+      rooms.get(roomId)
+    );
+
     io.to(socket.id).emit("created", roomId);
+    console.log(`Emitted "created" event to socket ${socket.id}`);
   });
 
   socket.on("join_room", (roomId) => {

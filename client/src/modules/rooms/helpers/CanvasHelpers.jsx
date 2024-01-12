@@ -11,18 +11,17 @@ const handleMove = (move, ctx) => {
   ctx.closePath();
 };
 
-const drawAllMoves = (ctx, movesWithoutUser, savedMoves, users) => {
+const drawAllMoves = (ctx, room) => {
+  const { movesWithoutUser, users, myMoves } = room;
   ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height);
 
   movesWithoutUser.forEach((move) => handleMove(move, ctx));
 
-  Object.values(users).forEach((user) => {
-    user.forEach((move) => handleMove(move, ctx));
+  users.forEach((userMoves) => {
+    userMoves.forEach((move) => handleMove(move, ctx));
   });
 
-  savedMoves.forEach((move) => {
-    handleMove(move, ctx);
-  });
+  myMoves.forEach((move) => handleMove(move, ctx));
 };
 
 export { handleMove, drawAllMoves };

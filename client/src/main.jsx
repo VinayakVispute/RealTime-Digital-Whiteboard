@@ -10,11 +10,11 @@ import { RoomIdProvider } from "./common/context/RoomId.jsx";
 ReactDOM.createRoot(document.getElementById("root")).render(
   <OptionsProvider>
     <UsersProvider>
-      <RoomProvider>
-        <RoomIdProvider>
+      <RoomIdProvider>
+        <RoomProvider>
           <App />
-        </RoomIdProvider>
-      </RoomProvider>
+        </RoomProvider>
+      </RoomIdProvider>
     </UsersProvider>
   </OptionsProvider>
 );

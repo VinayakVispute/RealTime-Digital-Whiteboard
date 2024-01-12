@@ -3,11 +3,16 @@ import { useViewportSize } from "../../../common/hooks/useViewportSize";
 import { useKeyPressEvent } from "react-use";
 import { motion } from "framer-motion";
 import { CANVAS_SIZE } from "../../../common/constants/canvasSize";
-import { useDraw, useSocketDraw } from "../hooks/CanvasHooks";
 import MiniMap from "./MiniMap";
 import { useBoardPosition } from "../hooks/useBoardPosition";
+import { useRoom } from "../../../common/context/RoomId";
+import { socket } from "../../../common/lib/socket";
+import { drawAllMoves } from "../helpers/CanvasHelpers";
+import useDraw from "../hooks/useDraw";
+import useSocketDraw from "../hooks/useSocketDraw";
 
 const Canvas = () => {
+  const room = useRoom();
   const canvasRef = useRef(null);
   const smallCanvasRef = useRef(null);
 
@@ -39,19 +44,6 @@ const Canvas = () => {
       }
     }
   };
-  // const copyCanvasToSmall = () => {
-  //   if (canvasRef.current) {
-  //     smallCanvasRef.current
-  //       ?.getContext("2d")
-  //       ?.drawImage(
-  //         canvasRef.current,
-  //         0,
-  //         0,
-  //         CANVAS_SIZE.width,
-  //         CANVAS_SIZE.height
-  //       );
-  //   }
-  // };
 
   const {
     handleDraw,
@@ -59,7 +51,9 @@ const Canvas = () => {
     handleStartDrawing,
     handleUndo,
     drawing,
-  } = useDraw(ctx, dragging, copyCanvasToSmall);
+  } = useDraw(ctx, dragging);
+
+  useSocketDraw(ctx, drawing);
 
   useEffect(() => {
     const newCtx = canvasRef.current?.getContext("2d");
@@ -76,7 +70,17 @@ const Canvas = () => {
       window.removeEventListener("keyup", handleKeyUp);
     };
   }, [dragging]);
-  useSocketDraw(ctx, drawing, copyCanvasToSmall);
+
+  useEffect(() => {
+    if (ctx) socket.emit("joined_room");
+  }, [ctx]);
+
+  useEffect(() => {
+    if (ctx) {
+      drawAllMoves(ctx, room);
+      copyCanvasToSmall();
+    }
+  }, [ctx, room]);
 
   return (
     <div className=" relative w-full h-full overflow-hidden">

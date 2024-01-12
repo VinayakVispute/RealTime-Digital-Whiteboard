@@ -4,12 +4,12 @@ import { useNavigate } from "react-router-dom";
 import { useRoomIdContext } from "../../../common/context/RoomId";
 const Home = () => {
   const [roomId, setRoomId] = useState("");
-  const { setContextRoomId } = useRoomIdContext();
+  const { setIdContextRoomId } = useRoomIdContext();
   const navigate = useNavigate();
 
   useEffect(() => {
     const handleCreated = (roomIdFromServer) => {
-      setContextRoomId(roomIdFromServer);
+      setIdContextRoomId(roomIdFromServer);
       console.log("Created room", roomIdFromServer);
       navigate(`/room/${roomIdFromServer}`);
     };
@@ -17,7 +17,7 @@ const Home = () => {
     const handleJoined = (roomIdFromServer, failed) => {
       if (!failed) {
         console.log("Joined room ", roomIdFromServer, roomId);
-        setContextRoomId(roomIdFromServer);
+        setIdContextRoomId(roomIdFromServer);
         return navigate(`/room/${roomIdFromServer}`);
       } else {
         alert("Failed to join room");
@@ -33,7 +33,7 @@ const Home = () => {
       socket.off("created", handleCreated);
       socket.off("joined", handleJoined);
     };
-  }, [navigate, setContextRoomId]);
+  }, [navigate, setIdContextRoomId]);
 
   const handleCreateRoom = () => {
     socket.emit("create_room");

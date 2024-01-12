@@ -1,16 +1,21 @@
-import { useState, useEffect } from "react";
 import { socket } from "../../../common/lib/socket";
 import UserMouse from "./UserMouse";
-import { useUserIds } from "../../../common/context/Users";
+import { useRoom } from "../../../common/context/RoomId";
+import { Fragment } from "react";
 
 const MouseRenderer = () => {
-  const userIds = useUserIds();
+  const room = useRoom();
+  console.log("room", room);
+  console.log("room.users", room.users);
+  console.log("room.users.keys()", room.users.keys());
   return (
     <>
-      {userIds.map((userId) => (
-        <>
-          <UserMouse key={userId} userId={userId} />
-        </>
+      {[...room.users.keys()].map((userId) => (
+        <Fragment key={userId}>
+          {userId === socket.id ? null : (
+            <UserMouse key={userId} userId={userId} />
+          )}
+        </Fragment>
       ))}
     </>
   );
