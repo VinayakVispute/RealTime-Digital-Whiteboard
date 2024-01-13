@@ -3,8 +3,10 @@ import { useBoardPosition } from "../hooks/useBoardPosition";
 import { socket } from "../../../common/lib/socket";
 import { motion } from "framer-motion";
 import { BsCursorFill } from "react-icons/bs";
+import { useRoom } from "../../../common/context/RoomId";
 
-const UserMouse = ({ userId, username }) => {
+const UserMouse = ({ userId }) => {
+  const { users } = useRoom();
   const boardPosition = useBoardPosition();
   const [x, setX] = useState(boardPosition.x.get());
   const [y, setY] = useState(boardPosition.y.get());
@@ -35,17 +37,17 @@ const UserMouse = ({ userId, username }) => {
       socket.off("mouse_moved", handleMouseMoved);
     };
   }, [userId]);
-  console.log(username);
   return (
     <motion.div
       className={`absolute top-0 left-0 text-blue-800 ${
         pos.x === -1 && "hidden"
       } pointer-events-none`}
+      style={{ color: users.get(userId)?.color }}
       animate={{ x: pos.x, y: pos.y }}
       transition={{ duration: 0.1 }}
     >
       <BsCursorFill className="-rotate-90" />
-      <p className="text-xs ml-2">{username}</p>
+      <p className="text-xs ml-2">{users.get(userId)?.name || "Anonymous"}</p>
     </motion.div>
   );
 };

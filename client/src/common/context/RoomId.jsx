@@ -1,4 +1,5 @@
 import { useContext, createContext, useState } from "react";
+import { getNextColor } from "../lib/getNextColor";
 
 const RoomIdContext = createContext();
 
@@ -9,18 +10,19 @@ export const useRoomIdContext = () => {
   }
   return context;
 };
+export const DEFAULT_ROOM = {
+  id: "",
+  users: new Map(),
+  usersMoves: new Map(),
+  movesWithoutUser: [],
+  myMoves: [],
+};
 
 export const RoomIdProvider = (props) => {
-  const [room, setRoom] = useState({
-    id: "",
-    users: new Map(),
-    usersMoves: new Map(),
-    movesWithoutUser: [],
-    myMoves: [],
-  });
+  const [room, setRoom] = useState(DEFAULT_ROOM);
 
   const setIdContextRoomId = (id) => {
-    return setRoom((prev) => ({ ...prev, id }));
+    return setRoom({ ...DEFAULT_ROOM, id });
   };
 
   return (
@@ -49,11 +51,12 @@ export const setRoomIdContext = () => {
 export const useSetUsers = () => {
   const { setRoom } = useRoomIdContext();
 
-  const handleAddUser = (userId, username) => {
+  const handleAddUser = (userId, name) => {
     setRoom((prev) => {
       const newUsers = prev.users;
       const newUsersMoves = prev.usersMoves;
-      newUsers.set(userId, username);
+      const color = getNextColor([...newUsers.values()].pop()?.color);
+      newUsers.set(userId, { name, color });
       newUsersMoves.set(userId, []);
       return { ...prev, users: newUsers, usersMoves: newUsersMoves };
     });

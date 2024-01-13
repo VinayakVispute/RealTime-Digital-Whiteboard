@@ -5,17 +5,14 @@ import { Fragment } from "react";
 
 const MouseRenderer = () => {
   const room = useRoom();
+  const { users } = useRoom();
 
   return (
     <>
-      {[...room.users.keys()].map((userId) => (
+      {[...users.keys()].map((userId) => (
         <Fragment key={userId}>
           {userId === socket.id ? null : (
-            <UserMouse
-              key={userId}
-              userId={userId}
-              username={room.users.get(userId) || "Anonymous"}
-            />
+            <UserMouse key={userId} userId={userId} />
           )}
         </Fragment>
       ))}

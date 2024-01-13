@@ -2,6 +2,7 @@ import { useMotionValue } from "framer-motion";
 import { createContext, useContext, useEffect } from "react";
 import { socket } from "../../../common/lib/socket";
 import { setRoomIdContext, useSetUsers } from "../../../common/context/RoomId";
+import { COLORS_ARRAY } from "../../../common/constants/color";
 const roomContext = createContext({
   x: null,
   y: null,
@@ -24,7 +25,15 @@ export const RoomProvider = (props) => {
   useEffect(() => {
     socket.on("room", (room, usersMovesToParse, usersToParse) => {
       const usersMoves = new Map(JSON.parse(usersMovesToParse));
-      const users = new Map(JSON.parse(usersToParse));
+      const usersParsed = new Map(JSON.parse(usersToParse));
+      const users = new Map();
+      usersParsed.forEach((name, id) => {
+        if (id === socket.id) return null;
+
+        const index = [...usersParsed.keys()].indexOf(id);
+        color = COLORS_ARRAY[index % COLORS_ARRAY.length];
+        users.set(id, { name, color });
+      });
       setRoom((prev) => ({
         ...prev,
         users,
