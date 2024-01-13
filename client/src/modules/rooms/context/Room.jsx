@@ -22,13 +22,19 @@ export const RoomProvider = (props) => {
   const y = useMotionValue(0);
 
   useEffect(() => {
-    socket.on("room", (room, usersToParse) => {
+    socket.on("room", (room, usersMovesToParse, usersToParse) => {
+      const usersMoves = new Map(JSON.parse(usersMovesToParse));
       const users = new Map(JSON.parse(usersToParse));
-      setRoom((prev) => ({ ...prev, users, movesWithoutUser: room.drawed }));
+      setRoom((prev) => ({
+        ...prev,
+        users,
+        usersMoves,
+        movesWithoutUser: room.drawed,
+      }));
     });
 
-    socket.on("new_user", (newUser) => {
-      handleAddUser(newUser);
+    socket.on("new_user", (userId, username) => {
+      handleAddUser(userId, username);
     });
 
     socket.on("user_disconnected", (disconnectedUser) => {

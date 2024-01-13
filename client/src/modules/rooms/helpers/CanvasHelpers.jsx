@@ -12,12 +12,12 @@ const handleMove = (move, ctx) => {
 };
 
 const drawAllMoves = (ctx, room) => {
-  const { movesWithoutUser, users, myMoves } = room;
+  const { movesWithoutUser, usersMoves, myMoves } = room;
   ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height);
 
   movesWithoutUser.forEach((move) => handleMove(move, ctx));
 
-  users.forEach((userMoves) => {
+  usersMoves.forEach((userMoves) => {
     userMoves.forEach((move) => handleMove(move, ctx));
   });
 

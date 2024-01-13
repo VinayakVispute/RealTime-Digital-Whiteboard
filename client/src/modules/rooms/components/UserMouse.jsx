@@ -4,7 +4,7 @@ import { socket } from "../../../common/lib/socket";
 import { motion } from "framer-motion";
 import { BsCursorFill } from "react-icons/bs";
 
-const UserMouse = ({ userId }) => {
+const UserMouse = ({ userId, username }) => {
   const boardPosition = useBoardPosition();
   const [x, setX] = useState(boardPosition.x.get());
   const [y, setY] = useState(boardPosition.y.get());
@@ -35,7 +35,7 @@ const UserMouse = ({ userId }) => {
       socket.off("mouse_moved", handleMouseMoved);
     };
   }, [userId]);
-
+  console.log(username);
   return (
     <motion.div
       className={`absolute top-0 left-0 text-blue-800 ${
@@ -45,6 +45,7 @@ const UserMouse = ({ userId }) => {
       transition={{ duration: 0.1 }}
     >
       <BsCursorFill className="-rotate-90" />
+      <p className="text-xs ml-2">{username}</p>
     </motion.div>
   );
 };

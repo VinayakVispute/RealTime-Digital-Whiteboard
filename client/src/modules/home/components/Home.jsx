@@ -4,6 +4,7 @@ import { useNavigate } from "react-router-dom";
 import { useRoomIdContext } from "../../../common/context/RoomId";
 const Home = () => {
   const [roomId, setRoomId] = useState("");
+  const [username, setUsername] = useState("");
   const { setIdContextRoomId } = useRoomIdContext();
   const navigate = useNavigate();
 
@@ -36,11 +37,11 @@ const Home = () => {
   }, [navigate, setIdContextRoomId]);
 
   const handleCreateRoom = () => {
-    socket.emit("create_room");
+    socket.emit("create_room", username);
   };
   const handleJoinRoom = (e) => {
     e.preventDefault();
-    socket.emit("join_room", roomId);
+    socket.emit("join_room", roomId, username);
   };
 
   return (
@@ -54,7 +55,13 @@ const Home = () => {
         <label className="self-start font-bold leading-tight">
           Enter your name
         </label>
-        <input className="input" id="room-id" placeholder="Username..." />
+        <input
+          className="input"
+          id="room-id"
+          placeholder="Username..."
+          value={username}
+          onChange={(e) => setUsername(e.target.value)}
+        />
       </div>
 
       <div className="my-8 h-px w-96 bg-zinc-200" />

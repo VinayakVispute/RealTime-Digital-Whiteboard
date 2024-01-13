@@ -14,6 +14,7 @@ export const RoomIdProvider = (props) => {
   const [room, setRoom] = useState({
     id: "",
     users: new Map(),
+    usersMoves: new Map(),
     movesWithoutUser: [],
     myMoves: [],
   });
@@ -48,47 +49,52 @@ export const setRoomIdContext = () => {
 export const useSetUsers = () => {
   const { setRoom } = useRoomIdContext();
 
-  const handleAddUsers = (userId) => {
+  const handleAddUser = (userId, username) => {
     setRoom((prev) => {
       const newUsers = prev.users;
-      newUsers.set(userId, []);
-      return { ...prev, users: newUsers };
+      const newUsersMoves = prev.usersMoves;
+      newUsers.set(userId, username);
+      newUsersMoves.set(userId, []);
+      return { ...prev, users: newUsers, usersMoves: newUsersMoves };
     });
   };
 
   const handleRemoveUser = (userId) => {
     setRoom((prev) => {
       const newUsers = prev.users;
-      const userMoves = newUsers.get(userId);
+      const newUsersMoves = prev.usersMoves;
+      const userMoves = newUsersMoves.get(userId);
       newUsers.delete(userId);
+      newUsersMoves.delete(userId);
       return {
         ...prev,
         users: newUsers,
+        usersMoves: newUsersMoves,
         movesWithoutUser: [...prev.movesWithoutUser, ...(userMoves || [])],
       };
     });
   };
   const handleAddMoveToUser = (userId, moves) => {
     setRoom((prev) => {
-      const newUsers = prev.users;
-      const oldMoves = prev.users.get(userId);
-      newUsers.set(userId, [...(oldMoves || []), moves]);
-      return { ...prev, users: newUsers };
+      const newUsersMoves = prev.usersMoves;
+      const oldMoves = prev.usersMoves.get(userId);
+      newUsersMoves.set(userId, [...(oldMoves || []), moves]);
+      return { ...prev, usersMoves: newUsersMoves };
     });
   };
 
   const handleRemoveMoveFromUser = (userId) => {
     setRoom((prev) => {
-      const newUsers = prev.users;
-      const oldMoves = prev.users.get(userId);
+      const newUsersMoves = prev.usersMoves;
+      const oldMoves = prev.usersMoves.get(userId);
       oldMoves?.pop();
-      newUsers.set(userId, oldMoves || []);
-      return { ...prev, users: newUsers };
+      newUsersMoves.set(userId, oldMoves || []);
+      return { ...prev, usersMoves: newUsersMoves };
     });
   };
 
   return {
-    handleAddUsers,
+    handleAddUser,
     handleRemoveUser,
     handleAddMoveToUser,
     handleRemoveMoveFromUser,
