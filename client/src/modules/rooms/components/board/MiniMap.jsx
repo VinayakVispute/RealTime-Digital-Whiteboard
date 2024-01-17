@@ -1,8 +1,8 @@
 import { forwardRef, useEffect, useRef } from "react";
-import { useViewportSize } from "../../../common/hooks/useViewportSize";
+import { useViewportSize } from "../../../../common/hooks/useViewportSize";
 import { useMotionValue, motion } from "framer-motion";
-import { CANVAS_SIZE } from "../../../common/constants/canvasSize";
-import { useBoardPosition } from "../hooks/useBoardPosition";
+import { CANVAS_SIZE } from "../../../../common/constants/canvasSize";
+import { useBoardPosition } from "../../hooks/useBoardPosition";
 
 const MiniMap = forwardRef((props, ref) => {
   const { dragging, setMovedMiniMap } = props;
@@ -32,7 +32,7 @@ const MiniMap = forwardRef((props, ref) => {
 
   return (
     <div
-      className="absolute top-10 right-10 z-30 rounded-lg border-2  border-red-500 bg-zinc-200"
+      className="absolute top-10 right-10 z-30  border-2 border-red-500 rounded-lg bg-zinc-50"
       ref={containerRef}
       style={{
         width: CANVAS_SIZE.width / 7,

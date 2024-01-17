@@ -1,6 +1,6 @@
-import { socket } from "../../../common/lib/socket";
+import { socket } from "../../../../common/lib/socket";
 import UserMouse from "./UserMouse";
-import { useRoom } from "../../../common/context/RoomId";
+import { useRoom } from "../../../../common/context/RoomId";
 import { Fragment } from "react";
 
 const MouseRenderer = () => {

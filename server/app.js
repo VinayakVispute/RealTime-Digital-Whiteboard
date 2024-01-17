@@ -104,12 +104,12 @@ io.on("connection", (socket) => {
     console.log("joined_room");
     const roomId = getRoomId();
     const room = rooms.get(roomId);
+    console.log(room.users);
     if (!room) return;
-    io.to(socket.id).emit(
-      "room",
-      room,
-      JSON.stringify([...room.usersMoves], JSON.stringify([...room.users]))
-    );
+    const usersMovesToParse = JSON.stringify([...room.usersMoves]);
+    const usersToParse = JSON.stringify([...room.users]);
+    console.log(usersMovesToParse, usersToParse);
+    io.to(socket.id).emit("room", room, usersMovesToParse, usersToParse);
     socket.broadcast
       .to(roomId)
       .emit("new_user", socket.id, room.users.get(socket.id) || "Anonymous");
@@ -123,8 +123,17 @@ io.on("connection", (socket) => {
 
   socket.on("draw", (move) => {
     const roomId = getRoomId();
-    addMove(roomId, socket.id, move);
-    socket.broadcast.to(roomId).emit("user_draw", move, socket.id);
+    const timestamp = Date.now();
+    addMove(roomId, socket.id, { ...move, timestamp });
+
+    io.to(socket.id).emit("your_move", { ...move, timestamp });
+    socket.broadcast
+      .to(roomId)
+      .emit("user_draw", { ...move, timestamp }, socket.id);
+  });
+
+  socket.on("send_msg", (msg) => {
+    io.to(getRoomId()).emit("new_msg", socket.id, msg);
   });
 
   socket.on("mouse_moved", (x, y) => {

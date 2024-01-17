@@ -24,6 +24,7 @@ export const RoomProvider = (props) => {
 
   useEffect(() => {
     socket.on("room", (room, usersMovesToParse, usersToParse) => {
+      console.log(usersMovesToParse, usersToParse);
       const usersMoves = new Map(JSON.parse(usersMovesToParse));
       const usersParsed = new Map(JSON.parse(usersToParse));
       const users = new Map();

@@ -24,8 +24,19 @@ const useDraw = (ctx, blocked) => {
       ctx.lineCap = "round";
       ctx.lineWidth = options.lineWidth;
       ctx.strokeStyle = options.lineColor;
+      if (options.eraser) ctx.globalCompositeOperation = "destination-out";
     }
   });
+
+  useEffect(() => {
+    socket.on("your_move", (move) => {
+      handleAddMyMove(move);
+    });
+
+    return () => {
+      socket.off("your_move");
+    };
+  }, [handleAddMyMove]);
 
   const handleUndo = useCallback(() => {
     if (ctx) {
@@ -65,11 +76,12 @@ const useDraw = (ctx, blocked) => {
     const move = {
       options,
       path: tempMoves,
+      timestamp: 0,
+      eraser: options.erase,
     };
-    handleAddMyMove(move);
 
     tempMoves = [];
-
+    ctx.globalCompositeOperation = "source-over";
     socket.emit("draw", move);
   };
 

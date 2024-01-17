@@ -1,9 +1,9 @@
 import { useRef } from "react";
-import { useBoardPosition } from "../hooks/useBoardPosition";
+import { useBoardPosition } from "../../hooks/useBoardPosition";
 import { useInterval, useMouse } from "react-use";
-import { socket } from "../../../common/lib/socket";
+import { socket } from "../../../../common/lib/socket";
 import { motion } from "framer-motion";
-import { getPos } from "../../../common/lib/getPos";
+import { getPos } from "../../../../common/lib/getPos";
 
 const MousePosition = () => {
   const prePosition = useRef({ x: 0, y: 0 });
@@ -16,7 +16,7 @@ const MousePosition = () => {
       socket.emit("mouse_moved", getPos(docX, x), getPos(docY, y));
       prePosition.current = { x: docX, y: docY };
     }
-  }, 25);
+  }, 150);
   return (
     <motion.div
       ref={ref}
