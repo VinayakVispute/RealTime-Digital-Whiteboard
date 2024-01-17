@@ -2,7 +2,7 @@ const handleMove = (move, ctx) => {
   const { options, path } = move;
   ctx.lineWidth = options.lineWidth;
   ctx.strokeStyle = options.lineColor;
-  if (move.eraser) ctx.globalCompositeOperation = "destination-out";
+  if (move.erase) ctx.globalCompositeOperation = "destination-out";
   ctx.beginPath();
   path.forEach(([x, y]) => {
     ctx.lineTo(x, y);

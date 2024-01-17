@@ -23,7 +23,7 @@ const Room = () => {
         <Canvas undoRef={undoRef} />
         <MousePosition />
         <MouseRenderer />
-        <Chat />
+        {/* <Chat />/ */}
       </div>
     </RoomProvider>
   );

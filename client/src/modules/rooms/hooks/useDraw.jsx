@@ -3,11 +3,22 @@ import { socket } from "../../../common/lib/socket";
 import { useOptionsValue } from "../../../common/context/Options";
 import { useBoardPosition } from "./useBoardPosition";
 import { getPos } from "../../../common/lib/getPos";
-import { useMyMoves } from "../../../common/context/RoomId";
+import { useMyMoves, useRoom } from "../../../common/context/RoomId";
+
+import { drawAllMoves } from "../helpers/CanvasHelpers";
 
 let tempMoves = [];
 
+const setCtxOptions = (ctx, options) => {
+  ctx.lineJoin = "round";
+  ctx.lineCap = "round";
+  ctx.lineWidth = options.lineWidth;
+  ctx.strokeStyle = options.lineColor;
+  if (options.erase) ctx.globalCompositeOperation = "destination-out";
+};
+
 const useDraw = (ctx, blocked) => {
+  const room = useRoom();
   const { handleRemoveMyMove, handleAddMyMove } = useMyMoves();
 
   const boardPosition = useBoardPosition();
@@ -15,16 +26,11 @@ const useDraw = (ctx, blocked) => {
   const movedY = boardPosition.y;
 
   const options = useOptionsValue();
-  console.log("options", options);
   const [drawing, setDrawing] = useState(false);
 
   useEffect(() => {
     if (ctx) {
-      ctx.lineJoin = "round";
-      ctx.lineCap = "round";
-      ctx.lineWidth = options.lineWidth;
-      ctx.strokeStyle = options.lineColor;
-      if (options.eraser) ctx.globalCompositeOperation = "destination-out";
+      setCtxOptions(ctx, options);
     }
   });
 
@@ -77,7 +83,7 @@ const useDraw = (ctx, blocked) => {
       options,
       path: tempMoves,
       timestamp: 0,
-      eraser: options.erase,
+      erase: options.erase,
     };
 
     tempMoves = [];
@@ -85,8 +91,22 @@ const useDraw = (ctx, blocked) => {
     socket.emit("draw", move);
   };
 
-  const handleDraw = (x, y) => {
+  const handleDraw = (x, y, shift) => {
     if (!ctx || !drawing || blocked) return;
+
+    if (shift) {
+      tempMoves = tempMoves.slice(0, 1);
+      drawAllMoves(ctx, room);
+      setCtxOptions(ctx, options);
+      ctx.beginPath();
+      ctx.lineTo(tempMoves[0][0], tempMoves[0][1]);
+      ctx.lineTo(getPos(x, movedX), getPos(y, movedY));
+      ctx.stroke();
+      ctx.closePath();
+
+      tempMoves.push([getPos(x, movedX), getPos(y, movedY)]);
+      return;
+    }
 
     ctx.lineTo(getPos(x, movedX), getPos(y, movedY));
     ctx.stroke();

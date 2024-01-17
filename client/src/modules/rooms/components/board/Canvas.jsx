@@ -108,7 +108,7 @@ const Canvas = ({ undoRef }) => {
         onMouseDown={(e) => handleStartDrawing(e.clientX, e.clientY)}
         onMouseUp={handleEndDrawing}
         onMouseMove={(e) => {
-          handleDraw(e.clientX, e.clientY);
+          handleDraw(e.clientX, e.clientY, e.shiftKey);
         }}
         onTouchStart={(e) => {
           handleStartDrawing(
