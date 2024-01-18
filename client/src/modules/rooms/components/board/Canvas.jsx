@@ -11,9 +11,11 @@ import { drawAllMoves } from "../../helpers/CanvasHelpers";
 import useDraw from "../../hooks/useDraw";
 import useSocketDraw from "../../hooks/useSocketDraw";
 import Background from "./Background";
+import { useOptionsValue } from "../../../../common/context/Options";
 
 const Canvas = ({ undoRef }) => {
   const room = useRoom();
+  const options = useOptionsValue();
   const canvasRef = useRef(null);
   const smallCanvasRef = useRef(null);
 
@@ -83,10 +85,10 @@ const Canvas = ({ undoRef }) => {
 
   useEffect(() => {
     if (ctx) {
-      drawAllMoves(ctx, room);
+      drawAllMoves(ctx, room, options);
       copyCanvasToSmall();
     }
-  }, [ctx, room]);
+  }, [ctx, room, options]);
 
   return (
     <div className=" relative w-full h-full ">

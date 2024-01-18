@@ -14,6 +14,8 @@ export const OptionsProvider = (props) => {
   const [options, setOptions] = useState({
     lineColor: "#000",
     lineWidth: 5,
+    erase: false,
+    shape: "line",
   });
 
   const updateOptions = (newOptions) => setOptions(newOptions);

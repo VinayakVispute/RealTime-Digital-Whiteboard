@@ -5,7 +5,12 @@ import { useBoardPosition } from "./useBoardPosition";
 import { getPos } from "../../../common/lib/getPos";
 import { useMyMoves, useRoom } from "../../../common/context/RoomId";
 
-import { drawAllMoves } from "../helpers/CanvasHelpers";
+import {
+  drawAllMoves,
+  drawCircle,
+  drawLine,
+  drawRect,
+} from "../helpers/CanvasHelpers";
 
 let tempMoves = [];
 
@@ -17,20 +22,28 @@ const setCtxOptions = (ctx, options) => {
   if (options.erase) ctx.globalCompositeOperation = "destination-out";
 };
 
+let tempRadius = 0;
+let tempSize = { width: 0, height: 0 };
+
 const useDraw = (ctx, blocked) => {
   const room = useRoom();
+  const options = useOptionsValue();
+
   const { handleRemoveMyMove, handleAddMyMove } = useMyMoves();
 
   const boardPosition = useBoardPosition();
   const movedX = boardPosition.x;
   const movedY = boardPosition.y;
 
-  const options = useOptionsValue();
   const [drawing, setDrawing] = useState(false);
 
   useEffect(() => {
     if (ctx) {
-      setCtxOptions(ctx, options);
+      ctx.lineJoin = "round";
+      ctx.lineCap = "round";
+      ctx.lineWidth = options.lineWidth;
+      ctx.strokeStyle = options.lineColor;
+      if (options.erase) ctx.globalCompositeOperation = "destination-out";
     }
   });
 
@@ -66,12 +79,15 @@ const useDraw = (ctx, blocked) => {
   const handleStartDrawing = (x, y) => {
     if (!ctx || blocked || blocked) return;
 
+    const finalX = getPos(x, movedX);
+    const finalY = getPos(y, movedY);
+
     setDrawing(true);
 
     ctx.beginPath();
-    ctx.lineTo(getPos(x, movedX), getPos(y, movedY));
+    ctx.lineTo(finalX, finalY);
     ctx.stroke();
-    tempMoves.push([getPos(x, movedX), getPos(y, movedY)]);
+    tempMoves.push([finalX, finalY]);
   };
 
   const handleEndDrawing = () => {
@@ -79,7 +95,14 @@ const useDraw = (ctx, blocked) => {
 
     setDrawing(false);
     ctx.closePath();
+
+    if (options.shape !== "circle") tempRadius = 0;
+    if (options.shape !== "rect") tempSize = { width: 0, height: 0 };
+
     const move = {
+      ...tempSize,
+      shape: options.shape,
+      radius: tempRadius,
       options,
       path: tempMoves,
       timestamp: 0,
@@ -94,24 +117,29 @@ const useDraw = (ctx, blocked) => {
   const handleDraw = (x, y, shift) => {
     if (!ctx || !drawing || blocked) return;
 
-    if (shift) {
-      tempMoves = tempMoves.slice(0, 1);
-      drawAllMoves(ctx, room);
-      setCtxOptions(ctx, options);
-      ctx.beginPath();
-      ctx.lineTo(tempMoves[0][0], tempMoves[0][1]);
-      ctx.lineTo(getPos(x, movedX), getPos(y, movedY));
-      ctx.stroke();
-      ctx.closePath();
+    const finalX = getPos(x, movedX);
+    const finalY = getPos(y, movedY);
 
-      tempMoves.push([getPos(x, movedX), getPos(y, movedY)]);
-      return;
+    switch (options.shape) {
+      case "line":
+        if (shift) {
+          tempMoves = tempMoves.slice(0, 1);
+          drawAllMoves(ctx, room, options);
+        }
+        drawLine(ctx, tempMoves[0], finalX, finalY, shift);
+        tempMoves.push([finalX, finalY]);
+        break;
+      case "circle":
+        drawAllMoves(ctx, room, options);
+        tempRadius = drawCircle(ctx, tempMoves[0], finalX, finalY);
+        break;
+      case "rect":
+        drawAllMoves(ctx, room, options);
+        tempSize = drawRect(ctx, tempMoves[0], finalX, finalY);
+        break;
+      default:
+        break;
     }
-
-    ctx.lineTo(getPos(x, movedX), getPos(y, movedY));
-    ctx.stroke();
-
-    tempMoves.push([getPos(x, movedX), getPos(y, movedY)]);
   };
 
   return {

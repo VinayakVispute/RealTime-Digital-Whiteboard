@@ -3,9 +3,8 @@ import { AnimatePresence, motion } from "framer-motion";
 import { HexColorPicker } from "react-colorful";
 import { BsPaletteFill } from "react-icons/bs";
 import { useClickAway } from "react-use";
-
-import { EntryAnimation } from "../../animation/ColorPickerAnimation";
 import { useOptions } from "../../../../common/context/Options";
+import { ColorPickerAnimateion } from "../../animation/ColorPickerAnimation";
 
 const ColorPicker = () => {
   const { options, setOptions } = useOptions();
@@ -32,7 +31,7 @@ const ColorPicker = () => {
           {opened && (
             <motion.div
               className="absolute top-0 left-14"
-              // variants={EntryAnimation}
+              // variants={ColorPickerAnimateion}
               initial="from"
               animate="to"
               exit="from"

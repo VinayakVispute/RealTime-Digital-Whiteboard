@@ -4,7 +4,7 @@ import { BsBorderWidth } from "react-icons/bs";
 import { useClickAway } from "react-use";
 
 import { useOptions } from "../../../../common/context/Options";
-import { EntryAnimation } from "../../animation/ColorPickerAnimation";
+import { ColorPickerAnimateion } from "../../animation/ColorPickerAnimation";
 
 const LineWidthPicker = () => {
   const { options, setOptions } = useOptions();
@@ -28,7 +28,7 @@ const LineWidthPicker = () => {
         {opened && (
           <motion.div
             className="absolute top-[6px] left-14 w-36"
-            // variants={EntryAnimation}
+            // variants={ColorPickerAnimateion}
             initial="from"
             animate="to"
             exit="from"

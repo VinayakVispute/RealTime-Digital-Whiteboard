@@ -4,6 +4,7 @@ import ColorPicker from "./ColorPicker";
 import LineWidthPicker from "./LineWidthPicker";
 import Earser from "./Earser";
 import { FaUndo } from "react-icons/fa";
+import ShapeSelector from "./ShapeSelector";
 
 const ToolBar = ({ undoRef }) => {
   return (
@@ -18,6 +19,7 @@ const ToolBar = ({ undoRef }) => {
       </button>
       <div className="h-px wiful bg-white" />
       <ColorPicker />
+      <ShapeSelector />
       <LineWidthPicker />
       <Earser />
       <button className="text-xl">
