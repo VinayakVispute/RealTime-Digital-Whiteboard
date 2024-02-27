@@ -1,21 +1,16 @@
 import { socket } from "../../../../common/lib/socket";
+import { useRoom } from "../../../../common/recoil/room";
 import UserMouse from "./UserMouse";
-import { useRoom } from "../../../../common/context/RoomId";
-import { Fragment } from "react";
 
 const MouseRenderer = () => {
-  const room = useRoom();
   const { users } = useRoom();
 
   return (
     <>
-      {[...users.keys()].map((userId) => (
-        <Fragment key={userId}>
-          {userId === socket.id ? null : (
-            <UserMouse key={userId} userId={userId} />
-          )}
-        </Fragment>
-      ))}
+      {[...users.keys()].map((userId) => {
+        if (userId === socket.id) return null;
+        return <UserMouse userId={userId} key={userId} />;
+      })}
     </>
   );
 };

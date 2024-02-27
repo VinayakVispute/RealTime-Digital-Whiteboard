@@ -1,93 +1,106 @@
-import { useState, useEffect, useCallback } from "react";
-import { socket } from "../../../common/lib/socket";
-import { useOptionsValue } from "../../../common/context/Options";
-import { useBoardPosition } from "./useBoardPosition";
+import { useState } from "react";
+
+import { DEFAULT_MOVE } from "../../../common/constants/defaultMove";
 import { getPos } from "../../../common/lib/getPos";
-import { useMyMoves, useRoom } from "../../../common/context/RoomId";
+import { getStringFromRgba } from "../../../common/lib/rgba";
+import { socket } from "../../../common/lib/socket";
 
 import {
-  drawAllMoves,
-  drawCircle,
-  drawLine,
-  drawRect,
-} from "../helpers/CanvasHelpers";
+  useOptionsValue,
+  useSetSelection,
+} from "../../../common/recoil/options";
+import { useMyMoves } from "../../../common/recoil/room";
+import { useSetSavedMoves } from "../../../common/recoil/savedMoves/SavedMovesHooks";
+
+import { drawCircle, drawLine, drawRect } from "../helpers/CanvasHelpers";
+import { useBoardPosition } from "./useBoardPosition";
+import { useCtx } from "../../../common/hooks/useCtx";
 
 let tempMoves = [];
 
-const setCtxOptions = (ctx, options) => {
-  ctx.lineJoin = "round";
-  ctx.lineCap = "round";
-  ctx.lineWidth = options.lineWidth;
-  ctx.strokeStyle = options.lineColor;
-  if (options.erase) ctx.globalCompositeOperation = "destination-out";
-};
-
-let tempRadius = 0;
+let tempCircle = { cX: 0, cY: 0, radiusX: 0, radiusY: 0 };
 let tempSize = { width: 0, height: 0 };
+let tempImageData;
 
-const useDraw = (ctx, blocked) => {
-  const room = useRoom();
+const useDraw = (blocked) => {
   const options = useOptionsValue();
 
-  const { handleRemoveMyMove, handleAddMyMove } = useMyMoves();
-
   const boardPosition = useBoardPosition();
+  const { clearSavedMoves } = useSetSavedMoves();
+  const { handleAddMyMove } = useMyMoves();
+  const { setSelection, clearSelection } = useSetSelection();
+
   const movedX = boardPosition.x;
   const movedY = boardPosition.y;
 
   const [drawing, setDrawing] = useState(false);
+  const ctx = useCtx();
 
-  useEffect(() => {
+  const setupCtxOptions = () => {
     if (ctx) {
-      ctx.lineJoin = "round";
-      ctx.lineCap = "round";
       ctx.lineWidth = options.lineWidth;
-      ctx.strokeStyle = options.lineColor;
-      if (options.erase) ctx.globalCompositeOperation = "destination-out";
+      ctx.strokeStyle = getStringFromRgba(options.lineColor);
+      ctx.fillStyle = getStringFromRgba(options.fillColor);
+      console.log(
+        options.lineColor,
+        "strokeStyle",
+        ctx.strokeStyle,
+        "fillStyle",
+        ctx.fillStyle
+      );
+      if (options.mode === "eraser")
+        ctx.globalCompositeOperation = "destination-out";
+      else ctx.getlobalCompositeOperation = "source-over";
     }
-  });
+  };
 
-  useEffect(() => {
-    socket.on("your_move", (move) => {
-      handleAddMyMove(move);
-    });
+  // const setCtxOptions = () => {
+  //   if (ctx) {
+  //     ctx.lineWidth = options.lineWidth;
+  //     ctx.strokeStyle = getStringFromRgba(options.lineColor);
+  //     ctx.fillStyle = getStringFromRgba(options.fillColor);
+  //     if (options.mode === "eraser")
+  //       ctx.globalCompositeOperation = "destination-out";
+  //     else ctx.getlobalCompositeOperation = "source-over";
+  //   }
+  // };
 
-    return () => {
-      socket.off("your_move");
-    };
-  }, [handleAddMyMove]);
-
-  const handleUndo = useCallback(() => {
-    if (ctx) {
-      handleRemoveMyMove();
-      socket.emit("undo");
+  const drawAndSet = () => {
+    if (!tempImageData) {
+      tempImageData = ctx.getImageData(
+        0,
+        0,
+        ctx.canvas.width,
+        ctx.canvas.height
+      );
     }
-  }, [ctx, handleRemoveMyMove]);
 
-  useEffect(() => {
-    const handleUndoKeyboard = (e) => {
-      if (e.ctrlKey && e.key === "z") {
-        handleUndo();
-      }
-    };
-    document.addEventListener("keydown", handleUndoKeyboard);
-    return () => {
-      document.removeEventListener("keydown", handleUndoKeyboard);
-    };
-  }, [handleUndo]);
+    if (tempImageData) {
+      ctx.putImageData(tempImageData, 0, 0);
+    }
+  };
 
   const handleStartDrawing = (x, y) => {
     if (!ctx || blocked || blocked) return;
 
-    const finalX = getPos(x, movedX);
-    const finalY = getPos(y, movedY);
+    const [finalX, finalY] = [getPos(x, movedX), getPos(y, movedY)];
 
     setDrawing(true);
+    setupCtxOptions();
+    drawAndSet();
 
-    ctx.beginPath();
-    ctx.lineTo(finalX, finalY);
-    ctx.stroke();
+    if (options.shape === "line" && options.mode !== "select") {
+      ctx.beginPath();
+      ctx.lineTo(finalX, finalY);
+      ctx.stroke();
+    }
+
     tempMoves.push([finalX, finalY]);
+  };
+
+  const clearOnYourMove = () => {
+    drawAndSet();
+    tempImageData = undefined;
   };
 
   const handleEndDrawing = () => {
@@ -96,45 +109,87 @@ const useDraw = (ctx, blocked) => {
     setDrawing(false);
     ctx.closePath();
 
-    if (options.shape !== "circle") tempRadius = 0;
-    if (options.shape !== "rect") tempSize = { width: 0, height: 0 };
+    let addMove = true;
+
+    if (options.mode === "select" && tempMoves.length) {
+      clearOnYourMove();
+      let x = tempMoves[0][0];
+      let y = tempMoves[0][1];
+      let width = tempMoves[tempMoves.length - 1][0] - x;
+      let height = tempMoves[tempMoves.length - 1][1] - y;
+
+      if (width < 0) {
+        width -= 4;
+        x += 2;
+      } else {
+        width += 4;
+        x -= 2;
+      }
+      if (height < 0) {
+        height -= 4;
+        y += 2;
+      } else {
+        height += 4;
+        y -= 2;
+      }
+
+      if ((width < 4 || width > 4) && (height < 4 || height > 4))
+        setSelection({ x, y, width, height });
+      else {
+        clearSelection();
+        addMove = false;
+      }
+    }
 
     const move = {
-      ...tempSize,
-      shape: options.shape,
-      radius: tempRadius,
-      options,
+      ...DEFAULT_MOVE,
+      rect: {
+        ...tempSize,
+      },
+      circle: {
+        ...tempCircle,
+      },
       path: tempMoves,
-      timestamp: 0,
-      erase: options.erase,
+      options,
     };
 
     tempMoves = [];
-    ctx.globalCompositeOperation = "source-over";
-    socket.emit("draw", move);
+    tempCircle = { cX: 0, cY: 0, radiusX: 0, radiusY: 0 };
+    tempSize = { width: 0, height: 0 };
+
+    if (options.mode !== "select") {
+      socket.emit("draw", move);
+      clearSavedMoves();
+    } else if (addMove) handleAddMyMove(move);
   };
 
   const handleDraw = (x, y, shift) => {
     if (!ctx || !drawing || blocked) return;
 
-    const finalX = getPos(x, movedX);
-    const finalY = getPos(y, movedY);
+    const [finalX, finalY] = [getPos(x, movedX), getPos(y, movedY)];
 
+    drawAndSet();
+    if (options.mode === "select") {
+      ctx.fillStyle = "rgba(0, 0, 0, 0.2)";
+
+      drawRect(ctx, tempMoves[0], finalX, finalY, false, true);
+      tempMoves.push([finalX, finalY]);
+
+      setupCtxOptions();
+      return;
+    }
     switch (options.shape) {
       case "line":
         if (shift) {
           tempMoves = tempMoves.slice(0, 1);
-          drawAllMoves(ctx, room, options);
         }
         drawLine(ctx, tempMoves[0], finalX, finalY, shift);
         tempMoves.push([finalX, finalY]);
         break;
       case "circle":
-        drawAllMoves(ctx, room, options);
-        tempRadius = drawCircle(ctx, tempMoves[0], finalX, finalY);
+        tempCircle = drawCircle(ctx, tempMoves[0], finalX, finalY);
         break;
       case "rect":
-        drawAllMoves(ctx, room, options);
         tempSize = drawRect(ctx, tempMoves[0], finalX, finalY);
         break;
       default:
@@ -146,8 +201,8 @@ const useDraw = (ctx, blocked) => {
     handleStartDrawing,
     handleEndDrawing,
     handleDraw,
-    handleUndo,
     drawing,
+    clearOnYourMove,
   };
 };
 

@@ -1,24 +1,31 @@
 import { useEffect, useState } from "react";
 import { socket } from "../../../common/lib/socket";
 import { useNavigate } from "react-router-dom";
-import { useRoomIdContext } from "../../../common/context/RoomId";
+import { useSetRoomId } from "../../../common/recoil/room";
+// import { useRoomIdContext } from "../../../common/context/RoomId";
 const Home = () => {
+  const setAtomRoomId = useSetRoomId();
+  // const { setIdContextRoomId } = useRoomIdContext();
+
   const [roomId, setRoomId] = useState("");
   const [username, setUsername] = useState("");
-  const { setIdContextRoomId } = useRoomIdContext();
+
   const navigate = useNavigate();
+
+  const handleLeaveRoom = () => {
+    socket.emit("leave_room");
+    setRoomId("");
+  };
 
   useEffect(() => {
     const handleCreated = (roomIdFromServer) => {
-      setIdContextRoomId(roomIdFromServer);
-      console.log("Created room", roomIdFromServer);
+      setAtomRoomId(roomIdFromServer);
       navigate(`/room/${roomIdFromServer}`);
     };
 
     const handleJoined = (roomIdFromServer, failed) => {
       if (!failed) {
-        console.log("Joined room ", roomIdFromServer, roomId);
-        setIdContextRoomId(roomIdFromServer);
+        setAtomRoomId(roomIdFromServer);
         return navigate(`/room/${roomIdFromServer}`);
       } else {
         alert("Failed to join room");
@@ -34,14 +41,18 @@ const Home = () => {
       socket.off("created", handleCreated);
       socket.off("joined", handleJoined);
     };
-  }, [navigate, setIdContextRoomId]);
+  }, [navigate, setAtomRoomId, roomId]);
+
+  useEffect(() => {
+    setAtomRoomId();
+  }, [setAtomRoomId]);
 
   const handleCreateRoom = () => {
     socket.emit("create_room", username);
   };
   const handleJoinRoom = (e) => {
     e.preventDefault();
-    socket.emit("join_room", roomId, username);
+    if (roomId) socket.emit("join_room", roomId, username);
   };
 
   return (
@@ -60,7 +71,7 @@ const Home = () => {
           id="room-id"
           placeholder="Username..."
           value={username}
-          onChange={(e) => setUsername(e.target.value)}
+          onChange={(e) => setUsername(e.target.value.slice(0, 15))}
         />
       </div>
 

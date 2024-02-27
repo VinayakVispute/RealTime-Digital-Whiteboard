@@ -13,3 +13,5 @@ export const COLORS = {
 };
 
 export const COLORS_ARRAY = [...Object.values(COLORS)];
+
+//DONE

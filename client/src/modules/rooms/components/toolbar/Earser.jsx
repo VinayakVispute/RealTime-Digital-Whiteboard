@@ -1,12 +1,12 @@
 import { useOptions } from "../../../../common/context/Options";
 import { FaEraser } from "react-icons/fa";
-const Earser = () => {
+const Eraser = () => {
   const { options, setOptions } = useOptions();
   return (
     <button
-      className={`text-xl ${options.erase && "bg-green-400"}`}
+      className={`text-xl ${options.eraser && "bg-green-400"}`}
       onClick={() => {
-        setOptions((prev) => ({ ...prev, erase: !prev.erase }));
+        setOptions((prev) => ({ ...prev, eraser: !prev.eraser }));
       }}
     >
       <FaEraser />
@@ -14,4 +14,4 @@ const Earser = () => {
   );
 };
 
-export default Earser;
+export default Eraser;

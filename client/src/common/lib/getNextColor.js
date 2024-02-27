@@ -8,3 +8,5 @@ export const getNextColor = (color) => {
   }
   return COLORS_ARRAY[(index + 1) % COLORS_ARRAY.length];
 };
+
+//DONE

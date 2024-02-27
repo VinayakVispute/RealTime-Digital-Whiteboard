@@ -1,12 +1,16 @@
-import { useList } from "react-use";
-import { useRoom } from "../../../../common/context/RoomId";
-import { socket } from "../../../../common/lib/socket";
 import { useEffect, useRef, useState } from "react";
+
 import { motion } from "framer-motion";
-import { DEFAULT_EASE } from "../../../../common/constants/easings";
 import { BsFillChatFill } from "react-icons/bs";
 import { FaChevronDown } from "react-icons/fa";
+import { useList } from "react-use";
+
+import { DEFAULT_EASE } from "../../../../common/constants/easings";
+import { socket } from "../../../../common/lib/socket";
+import { useRoom } from "../../../../common/recoil/room";
+
 import ChatInput from "./ChatInput";
+import Message from "./Message";
 
 const Chat = () => {
   const room = useRoom();
@@ -15,25 +19,29 @@ const Chat = () => {
 
   const [newMsg, setNewMsg] = useState(false);
   const [opened, setOpened] = useState(false);
-  const [msgs, setMsgs] = useList([]);
+  const [msgs, handleMsgs] = useList([]);
 
   useEffect(() => {
     const handleNewMsg = (userId, msg) => {
       const user = room.users.get(userId);
-      setMsgs.push({
+
+      handleMsgs.push({
         userId,
         msg,
         id: msgs.length + 1,
         username: user?.name || "Anonymous",
         color: user?.color || "#000",
       });
+
       msgList.current?.scroll({
         top: msgList.current.scrollHeight,
         behavior: "smooth",
       });
       if (!opened) setNewMsg(true);
     };
+
     socket.on("new_msg", handleNewMsg);
+
     return () => {
       socket.off("new_msg", handleNewMsg);
     };
@@ -41,7 +49,7 @@ const Chat = () => {
 
   return (
     <motion.div
-      className="absolute bottom-0 z-50 flex h-[300px] w-full flex-col overflow-hidden rounded-t-md sm:left-36 sm:w-[30rem]"
+      className="absolute bottom-0 z-50 flex h-[300px] w-full flex-col  rounded-t-md sm:left-36 sm:w-[30rem]"
       animate={{ y: opened ? 0 : 260 }}
       transition={{ ease: DEFAULT_EASE, duration: 0.2 }}
     >
