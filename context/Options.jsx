@@ -12,10 +12,12 @@ export const useOptions = () => {
 
 export const OptionsProvider = (props) => {
   const [options, setOptions] = useState({
-    lineColor: "#000",
+    lineColor: { r: 0, g: 0, b: 0, a: 1 },
+    fillColor: { r: 0, g: 0, b: 0, a: 0 },
     lineWidth: 5,
-    erase: false,
+    mode: "draw",
     shape: "line",
+    selection: null,
   });
 
   const updateOptions = (newOptions) => setOptions(newOptions);
@@ -31,4 +33,25 @@ export const OptionsProvider = (props) => {
 export const useOptionsValue = () => {
   const { options } = useOptions();
   return options;
+};
+
+export const useSetSelection = () => {
+  const { setOptions } = useOptions();
+  const setSelection = (x, y, width, height) => {
+    setOptions((prev) => ({
+      ...prev,
+      selection: { x, y, width, height },
+    }));
+  };
+
+  const clearSelection = () => {
+    setOptions((prev) => {
+      return {
+        ...prev,
+        selection: null,
+      };
+    });
+  };
+
+  return { clearSelection, setSelection };
 };

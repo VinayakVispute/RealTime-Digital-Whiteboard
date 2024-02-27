@@ -2,12 +2,12 @@ import { useRef, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import { BsBorderWidth } from "react-icons/bs";
 import { useClickAway } from "react-use";
-
-import { useOptions } from "../../../../common/context/Options";
-import { ColorPickerAnimateion } from "../../animation/ColorPickerAnimation";
+// import { useOptions } from "../../../../common/context/Options";
+import { EntryAnimation } from "../../animation/Entry.animations";
+import { useOptions } from "../../../../common/recoil/options";
 
 const LineWidthPicker = () => {
-  const { options, setOptions } = useOptions();
+  const [options, setOptions] = useOptions();
 
   const ref = useRef(null);
 
@@ -20,7 +20,7 @@ const LineWidthPicker = () => {
       <button
         className="text-xl"
         onClick={() => setOpened(!opened)}
-        // disabled={options.mode === "select"}
+        disabled={options.mode === "select"}
       >
         <BsBorderWidth />
       </button>
@@ -29,6 +29,7 @@ const LineWidthPicker = () => {
           <motion.div
             className="absolute top-[6px] left-14 w-36"
             // variants={ColorPickerAnimateion}
+            o
             initial="from"
             animate="to"
             exit="from"

@@ -1,9 +1,12 @@
 import { useEffect, useState } from "react";
-import { useRoomIdContext } from "../../../common/context/RoomId";
+// import { useRoomIdContext } from "../../../common/context/RoomId";
 import { socket } from "../../../common/lib/socket";
 import { useNavigate, useParams } from "react-router-dom";
+import { useSetRoomId } from "../../../common/recoil/room";
+
 const NameInput = () => {
-  const { setIdContextRoomId } = useRoomIdContext();
+  // const { setIdContextRoomId } = useRoomIdContext();
+  const setRoomId = useSetRoomId();
   const [name, setName] = useState("");
   const { roomId } = useParams();
   const formattedRoomId = roomId ? roomId.toString() : "";
@@ -15,7 +18,6 @@ const NameInput = () => {
     socket.emit("check_room", roomId);
 
     socket.on("room_exists", (exists) => {
-      console.log("room_exists", exists);
       if (!exists) {
         navigate("/");
       }
@@ -29,13 +31,13 @@ const NameInput = () => {
   useEffect(() => {
     const handleJoined = (roomIdFromServer, failed) => {
       if (failed) navigate("/");
-      else setIdContextRoomId(roomIdFromServer);
+      else setRoomId(roomIdFromServer);
     };
     socket.on("joined", handleJoined);
     return () => {
       socket.off("joined", handleJoined);
     };
-  }, [navigate, setIdContextRoomId]);
+  }, [navigate, setRoomId]);
 
   const handleJoinRoom = (e) => {
     e.preventDefault();
@@ -43,8 +45,11 @@ const NameInput = () => {
   };
 
   return (
-    <form className="flex flex-col items-center" onSubmit={handleJoinRoom}>
-      <h1 className="mt-24 text-extra font-extrabold leading-tight">
+    <form
+      className="my-24 flex flex-col items-center"
+      onSubmit={handleJoinRoom}
+    >
+      <h1 className="text-5xl  font-extrabold leading-tight sm:text-extra">
         Digiboard
       </h1>
       <h3 className="text-xl">Real-time whiteboard</h3>

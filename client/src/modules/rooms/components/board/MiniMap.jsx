@@ -1,50 +1,84 @@
-import { forwardRef, useEffect, useRef } from "react";
-import { useViewportSize } from "../../../../common/hooks/useViewportSize";
-import { useMotionValue, motion } from "framer-motion";
-import { CANVAS_SIZE } from "../../../../common/constants/canvasSize";
-import { useBoardPosition } from "../../hooks/useBoardPosition";
+import { useEffect, useMemo, useState, useRef } from "react";
 
-const MiniMap = forwardRef((props, ref) => {
-  const { dragging, setMovedMiniMap } = props;
-  const { x, y } = useBoardPosition();
-  const containerRef = useRef(null);
+import { useMotionValue, motion } from "framer-motion";
+
+import { CANVAS_SIZE } from "../../../../common/constants/canvasSize";
+import { useViewportSize } from "../../../../common/hooks/useViewportSize";
+
+import { useBoardPosition } from "../../hooks/useBoardPosition";
+import useRefs from "../../hooks/useRefs";
+
+const MiniMap = ({ dragging }) => {
+  const { minimapRef } = useRefs();
+  const boardPos = useBoardPosition();
+  // const { x, y } = useBoardPosition();
+
   const { width, height } = useViewportSize();
+
+  const [x, setX] = useState(0);
+  const [y, setY] = useState(0);
+  const [draggingMinimap, setDraggingMinimap] = useState(false);
+
+  useEffect(() => {
+    if (!draggingMinimap) {
+      const unsubscribe = boardPos.y.onChange(setY);
+      return unsubscribe;
+    }
+
+    return () => {};
+  }, [boardPos.y, draggingMinimap]);
+
+  useEffect(() => {
+    if (!draggingMinimap) {
+      const unsubscribe = boardPos.x.onChange(setX);
+      return unsubscribe;
+    }
+
+    return () => {};
+  }, [boardPos.x, draggingMinimap]);
+
+  const containerRef = useRef(null);
+
   const miniX = useMotionValue(0);
   const miniY = useMotionValue(0);
 
+  const divider = useMemo(() => {
+    if (width > 1600) return 7;
+    if (width > 1000) return 10;
+    if (width > 600) return 14;
+    return 20;
+  }, [width]);
+
   useEffect(() => {
     miniX.onChange((newX) => {
-      if (!dragging) {
-        x.set(-newX * 7);
-      }
+      if (!dragging) boardPos.x.set(Math.floor(-newX * divider));
     });
     miniY.onChange((newY) => {
-      if (!dragging) {
-        y.set(-newY * 7);
-      }
+      if (!dragging) boardPos.y.set(Math.floor(-newY * divider));
     });
 
     return () => {
       miniX.clearListeners();
       miniY.clearListeners();
     };
-  }, [dragging, miniX, miniY, x, y]);
+  }, [boardPos.x, boardPos.y, divider, dragging, miniX, miniY]);
 
   return (
     <div
-      className="absolute top-10 right-10 z-30  border-2 border-red-500 rounded-lg bg-zinc-50"
+      className="absolute top-10 right-10 z-30   border-2 border-red-500 rounded-lg shadow-lg  "
       ref={containerRef}
       style={{
-        width: CANVAS_SIZE.width / 7,
-        height: CANVAS_SIZE.height / 7,
+        width: CANVAS_SIZE.width / divider,
+        height: CANVAS_SIZE.height / divider,
       }}
     >
       <canvas
-        ref={ref}
+        ref={minimapRef}
         width={CANVAS_SIZE.width}
         height={CANVAS_SIZE.height}
         className="h-full w-full"
       />
+
       <motion.div
         drag
         dragConstraints={containerRef}
@@ -53,23 +87,23 @@ const MiniMap = forwardRef((props, ref) => {
           power: 0,
           timeConstant: 0,
         }}
-        onDragStart={() => setMovedMiniMap((prev) => !prev)}
-        onDragEnd={() => setMovedMiniMap((prev) => !prev)}
-        className="absolute top-0 left-0 cursor-grab border-2 border-red-500"
+        onDragStart={() => setDraggingMinimap(true)}
+        onDragEnd={() => setDraggingMinimap(false)}
+        className="absolute top-0 left-0 cursor-grab rounded-lg border-2 border-red-500"
         style={{
-          width: width / 7,
-          height: height / 7,
+          width: width / divider,
+          height: height / divider,
           x: miniX,
           y: miniY,
         }}
         animate={{
-          x: -x.get() / 7,
-          y: -y.get() / 7,
+          x: -x / divider,
+          y: -y / divider,
         }}
         transition={{ duration: 0 }}
-      ></motion.div>
+      />
     </div>
   );
-});
+};
 
 export default MiniMap;

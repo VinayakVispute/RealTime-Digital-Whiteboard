@@ -1,63 +1,47 @@
-import { useContext, createContext, useState } from "react";
-import { getNextColor } from "../lib/getNextColor";
+import { useRecoilState, useRecoilValue, useSetRecoilState } from "recoil";
 
-const RoomIdContext = createContext();
+import { getNextColor } from "../../../common/lib/getNextColor";
 
-export const useRoomIdContext = () => {
-  const context = useContext(RoomIdContext);
-  if (!context) {
-    throw new Error("useRoomContext must be used within a RoomProvider");
-  }
-  return context;
-};
-export const DEFAULT_ROOM = {
-  id: "",
-  users: new Map(),
-  usersMoves: new Map(),
-  movesWithoutUser: [],
-  myMoves: [],
-};
-
-export const RoomIdProvider = (props) => {
-  const [room, setRoom] = useState(DEFAULT_ROOM);
-
-  const setIdContextRoomId = (id) => {
-    return setRoom({ ...DEFAULT_ROOM, id });
-  };
-
-  return (
-    <RoomIdContext.Provider
-      value={{ setIdContextRoomId, setRoom, room }}
-      {...props}
-    />
-  );
-};
+import { DEFAULT_ROOM, roomAtom } from "./RoomAtoms";
 
 export const useRoom = () => {
-  const { room } = useRoomIdContext();
+  const room = useRecoilValue(roomAtom);
+
   return room;
 };
 
-export const useRoomId = () => {
-  const { id } = useRoomIdContext();
-  return id;
-};
+export const useSetRoom = () => {
+  const setRoom = useSetRecoilState(roomAtom);
 
-export const setRoomIdContext = () => {
-  const { setRoom } = useRoomIdContext();
   return setRoom;
 };
 
+export const useSetRoomId = () => {
+  const setRoomId = useSetRecoilState(roomAtom);
+
+  const handleSetRoomId = (id) => {
+    setRoomId({ ...DEFAULT_ROOM, id });
+  };
+
+  return handleSetRoomId;
+};
+
 export const useSetUsers = () => {
-  const { setRoom } = useRoomIdContext();
+  const setRoom = useSetRecoilState(roomAtom);
 
   const handleAddUser = (userId, name) => {
     setRoom((prev) => {
       const newUsers = prev.users;
       const newUsersMoves = prev.usersMoves;
+
       const color = getNextColor([...newUsers.values()].pop()?.color);
-      newUsers.set(userId, { name, color });
+
+      newUsers.set(userId, {
+        name,
+        color,
+      });
       newUsersMoves.set(userId, []);
+
       return { ...prev, users: newUsers, usersMoves: newUsersMoves };
     });
   };
@@ -66,7 +50,9 @@ export const useSetUsers = () => {
     setRoom((prev) => {
       const newUsers = prev.users;
       const newUsersMoves = prev.usersMoves;
+
       const userMoves = newUsersMoves.get(userId);
+
       newUsers.delete(userId);
       newUsersMoves.delete(userId);
       return {
@@ -77,10 +63,12 @@ export const useSetUsers = () => {
       };
     });
   };
+
   const handleAddMoveToUser = (userId, moves) => {
     setRoom((prev) => {
       const newUsersMoves = prev.usersMoves;
       const oldMoves = prev.usersMoves.get(userId);
+
       newUsersMoves.set(userId, [...(oldMoves || []), moves]);
       return { ...prev, usersMoves: newUsersMoves };
     });
@@ -91,6 +79,7 @@ export const useSetUsers = () => {
       const newUsersMoves = prev.usersMoves;
       const oldMoves = prev.usersMoves.get(userId);
       oldMoves?.pop();
+
       newUsersMoves.set(userId, oldMoves || []);
       return { ...prev, usersMoves: newUsersMoves };
     });
@@ -105,16 +94,28 @@ export const useSetUsers = () => {
 };
 
 export const useMyMoves = () => {
-  const { room, setRoom } = useRoomIdContext();
+  const [room, setRoom] = useRecoilState(roomAtom);
 
   const handleAddMyMove = (move) => {
-    setRoom((prev) => ({ ...prev, myMoves: [...prev.myMoves, move] }));
+    setRoom((prev) => {
+      if (prev.myMoves[prev.myMoves.length - 1]?.options.mode === "select")
+        return {
+          ...prev,
+          myMoves: [...prev.myMoves.slice(0, prev.myMoves.length - 1), move],
+        };
+
+      return { ...prev, myMoves: [...prev.myMoves, move] };
+    });
   };
 
   const handleRemoveMyMove = () => {
     const newMoves = [...room.myMoves];
-    newMoves.pop();
+    const move = newMoves.pop();
+
     setRoom((prev) => ({ ...prev, myMoves: newMoves }));
+
+    return move;
   };
-  return { myMoves: room.myMoves, handleAddMyMove, handleRemoveMyMove };
+
+  return { handleAddMyMove, handleRemoveMyMove, myMoves: room.myMoves };
 };

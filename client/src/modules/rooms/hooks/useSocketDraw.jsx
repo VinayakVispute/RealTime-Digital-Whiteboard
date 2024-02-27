@@ -1,16 +1,14 @@
 import { useEffect } from "react";
 import { socket } from "../../../common/lib/socket";
-import { handleMove } from "../helpers/CanvasHelpers";
-import { useSetUsers } from "../../../common/context/RoomId";
-
-const useSocketDraw = (ctx, drawing) => {
+import { useSetUsers } from "../../../common/recoil/room";
+const useSocketDraw = (drawing) => {
   const { handleRemoveMoveFromUser, handleAddMoveToUser } = useSetUsers();
 
   useEffect(() => {
     let moveToDrawLater;
     let userIdLater = "";
     socket.on("user_draw", (move, userId) => {
-      if (ctx && !drawing) {
+      if (!drawing) {
         handleAddMoveToUser(userId, move);
       } else {
         moveToDrawLater = move;
@@ -20,12 +18,11 @@ const useSocketDraw = (ctx, drawing) => {
 
     return () => {
       socket.off("user_draw");
-      if (moveToDrawLater && userIdLater && ctx) {
-        handleMove(moveToDrawLater, ctx);
+      if (moveToDrawLater && userIdLater) {
         handleAddMoveToUser(userIdLater, moveToDrawLater);
       }
     };
-  }, [ctx, handleAddMoveToUser, drawing]);
+  }, [handleAddMoveToUser, drawing]);
 
   useEffect(() => {
     const handleUserUndo = (userId) => {
@@ -36,7 +33,7 @@ const useSocketDraw = (ctx, drawing) => {
     return () => {
       socket.off("user_undo", handleUserUndo);
     };
-  }, [ctx, handleRemoveMoveFromUser]);
+  }, [handleRemoveMoveFromUser]);
 };
 
 export default useSocketDraw;
