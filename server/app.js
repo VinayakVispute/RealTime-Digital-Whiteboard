@@ -36,15 +36,6 @@ const undoMove = (roomId, socketId) => {
   room.usersMoves.get(socketId).pop();
 };
 
-const leaveRoom = (roomId, socketId) => {
-  const room = rooms.get(roomId);
-  if (!room) return;
-  const userMoves = room?.usersMoves?.get(socketId);
-  room?.drawed?.push(...userMoves);
-  room?.users?.delete(socketId);
-  console.log("Confirm leave room", room);
-};
-
 io.on("connection", (socket) => {
   const getRoomId = () => {
     const joinedRoom = [...socket.rooms].find((room) => room !== socket.id);
@@ -53,6 +44,15 @@ io.on("connection", (socket) => {
   };
 
   console.log(`User with id ${socket.id} is connected to the server`);
+
+  const leaveRoom = (roomId, socketId) => {
+    const room = rooms.get(roomId);
+    if (!room) return;
+    const userMoves = room?.usersMoves?.get(socketId);
+    room?.users?.delete(socketId);
+
+    socket.leave(roomId);
+  };
 
   socket.on("create_room", (username) => {
     console.log("Received create_room event");
@@ -69,9 +69,9 @@ io.on("connection", (socket) => {
 
     // Create a new room object with users and drawed arrays
     rooms.set(roomId, {
+      usersMoves: new Map([[socket.id, []]]),
       users: new Map([[socket.id, username]]),
       drawed: [],
-      usersMoves: new Map([[socket.id, []]]),
     });
 
     console.log(
@@ -104,7 +104,6 @@ io.on("connection", (socket) => {
     console.log("joined_room");
     const roomId = getRoomId();
     const room = rooms.get(roomId);
-    console.log(room.users);
     if (!room) return;
     const usersMovesToParse = JSON.stringify([...room.usersMoves]);
     const usersToParse = JSON.stringify([...room.users]);
@@ -124,6 +123,7 @@ io.on("connection", (socket) => {
   socket.on("draw", (move) => {
     const roomId = getRoomId();
     const timestamp = Date.now();
+    move.id = uuidv4();
     addMove(roomId, socket.id, { ...move, timestamp });
 
     io.to(socket.id).emit("your_move", { ...move, timestamp });
@@ -136,7 +136,7 @@ io.on("connection", (socket) => {
     io.to(getRoomId()).emit("new_msg", socket.id, msg);
   });
 
-  socket.on("mouse_moved", (x, y) => {
+  socket.on("mouse_move", (x, y) => {
     const roomId = getRoomId();
     socket.broadcast.to(roomId).emit("mouse_moved", x, y, socket.id);
   });
