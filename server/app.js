@@ -3,7 +3,7 @@ const app = express();
 const cors = require("cors");
 const http = require("http");
 const { Server } = require("socket.io"); // Fix import statement
-const { uuid } = require("uuidv4");
+const { v4 } = require("uuid");
 const port = process.env.PORT || 8000;
 app.use(cors());
 const server = http.createServer(app);
@@ -27,13 +27,14 @@ const addMove = (roomId, socketId, move) => {
 
   if (!room.users.has(socketId)) {
     room.usersMoves.set(socketId, [move]);
-    console.log("Set new user");
   }
+
   room.usersMoves.get(socketId).push(move);
 };
 
 const undoMove = (roomId, socketId) => {
   const room = rooms.get(roomId);
+
   room.usersMoves.get(socketId).pop();
 };
 
@@ -47,10 +48,9 @@ io.on("connection", (socket) => {
 
   const leaveRoom = (roomId, socketId) => {
     const room = rooms.get(roomId);
-
     if (!room) return;
 
-    const userMoves = room?.usersMoves?.get(socketId);
+    const userMoves = room.usersMoves.get(socketId);
 
     if (userMoves) room.drawed.push(...userMoves);
     room.users.delete(socketId);
@@ -58,56 +58,34 @@ io.on("connection", (socket) => {
     socket.leave(roomId);
   };
 
-  console.log(`User with id ${socket.id} is connected to the server`);
-
-  const leaveRoom = (roomId, socketId) => {
-    const room = rooms.get(roomId);
-    if (!room) return;
-    const userMoves = room?.usersMoves?.get(socketId);
-    room?.users?.delete(socketId);
-
-    socket.leave(roomId);
-  };
-
   socket.on("create_room", (username) => {
-    console.log("Received create_room event");
-
     let roomId;
     do {
       roomId = Math.random().toString(36).substring(2, 6);
     } while (rooms.has(roomId));
 
-    console.log("Generated roomId:", roomId);
-
     socket.join(roomId);
-    console.log(`Socket ${socket.id} joined room ${roomId}`);
 
-    // Create a new room object with users and drawed arrays
     rooms.set(roomId, {
       usersMoves: new Map([[socket.id, []]]),
       drawed: [],
       users: new Map([[socket.id, username]]),
     });
 
-    console.log(
-      `Room ${roomId} created with initial state:`,
-      rooms.get(roomId)
-    );
-
     io.to(socket.id).emit("created", roomId);
-    console.log(`Emitted "created" event to socket ${socket.id}`);
   });
 
   socket.on("join_room", (roomId, username) => {
     const room = rooms.get(roomId);
-    if (room && room.users.size < 4) {
+
+    if (room && room.users.size < 12) {
       socket.join(roomId);
+
       room.users.set(socket.id, username);
       room.usersMoves.set(socket.id, []);
+
       io.to(socket.id).emit("joined", roomId);
-    } else {
-      io.to(socket.id).emit("joined", "", true);
-    }
+    } else io.to(socket.id).emit("joined", "", true);
   });
 
   socket.on("check_room", (roomId) => {
@@ -116,14 +94,18 @@ io.on("connection", (socket) => {
   });
 
   socket.on("joined_room", () => {
-    console.log("joined_room");
     const roomId = getRoomId();
+
     const room = rooms.get(roomId);
     if (!room) return;
-    const usersMovesToParse = JSON.stringify([...room.usersMoves]);
-    const usersToParse = JSON.stringify([...room.users]);
-    console.log(usersMovesToParse, usersToParse);
-    io.to(socket.id).emit("room", room, usersMovesToParse, usersToParse);
+
+    io.to(socket.id).emit(
+      "room",
+      room,
+      JSON.stringify([...room.usersMoves]),
+      JSON.stringify([...room.users])
+    );
+
     socket.broadcast
       .to(roomId)
       .emit("new_user", socket.id, room.users.get(socket.id) || "Anonymous");
@@ -132,47 +114,48 @@ io.on("connection", (socket) => {
   socket.on("leave_room", () => {
     const roomId = getRoomId();
     leaveRoom(roomId, socket.id);
-    console.log(`User with id ${socket.id} & room id ${roomId} is leaving`);
 
     io.to(roomId).emit("user_disconnected", socket.id);
   });
 
   socket.on("draw", (move) => {
     const roomId = getRoomId();
+
     const timestamp = Date.now();
-    move.id = uuid();
+
+    // eslint-disable-next-line no-param-reassign
+    move.id = v4();
+
     addMove(roomId, socket.id, { ...move, timestamp });
 
     io.to(socket.id).emit("your_move", { ...move, timestamp });
+
     socket.broadcast
       .to(roomId)
       .emit("user_draw", { ...move, timestamp }, socket.id);
+  });
+
+  socket.on("undo", () => {
+    const roomId = getRoomId();
+
+    undoMove(roomId, socket.id);
+
+    socket.broadcast.to(roomId).emit("user_undo", socket.id);
+  });
+
+  socket.on("mouse_move", (x, y) => {
+    socket.broadcast.to(getRoomId()).emit("mouse_moved", x, y, socket.id);
   });
 
   socket.on("send_msg", (msg) => {
     io.to(getRoomId()).emit("new_msg", socket.id, msg);
   });
 
-  socket.on("mouse_move", (x, y) => {
-    const roomId = getRoomId();
-    socket.broadcast.to(roomId).emit("mouse_moved", x, y, socket.id);
-  });
-
-  socket.on("undo", () => {
-    const roomId = getRoomId();
-    undoMove(roomId, socket.id);
-    socket.broadcast.to(roomId).emit("user_undo", socket.id);
-  });
-
   socket.on("disconnecting", () => {
     const roomId = getRoomId();
     leaveRoom(roomId, socket.id);
-    console.log(
-      `User with id ${socket.id} & room id ${roomId} is disconnecting`
-    );
-    io.to(roomId).emit("user_disconnected", socket.id);
 
-    console.log(`User with id ${socket.id} disconnected`);
+    io.to(roomId).emit("user_disconnected", socket.id);
   });
 });
 
